@@ -1,0 +1,1224 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="ahrefs-site-verification" content="b21134b1225ebf149e1266990fcc7b2bb3d9812fb4c9cdb1db0e5b103b2be6d2">
+    <link rel="profile" href="http://gmpg.org/xfn/11"/>
+    <link rel="shortcut icon" href="https://www.sqlservercentral.com/wp-content/uploads/2019/04/favicon.ico" />
+    <link rel="pingback" href="https://www.sqlservercentral.com/xmlrpc.php"/>
+    <title>Comparing Two Execution Plans &ndash; SQLServerCentral</title>
+
+            <meta name="wp:id" content="3861018" />
+        
+<!-- This site is optimized with the Yoast SEO plugin v11.6 - https://yoast.com/wordpress/plugins/seo/ -->
+<meta name="description" content="This is a short look at a technique that I discovered recently in Management Studio (SSMS). The technique is to compare two graphical execution plans in"/>
+<link rel="canonical" href="https://www.sqlservercentral.com/articles/comparing-two-execution-plans" />
+<meta property="og:locale" content="en_GB" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="Comparing Two Execution Plans &ndash; SQLServerCentral" />
+<meta property="og:description" content="This is a short look at a technique that I discovered recently in Management Studio (SSMS). The technique is to compare two graphical execution plans in" />
+<meta property="og:url" content="https://www.sqlservercentral.com/articles/comparing-two-execution-plans" />
+<meta property="og:site_name" content="SQLServerCentral" />
+<meta property="article:section" content="Performance Tuning" />
+<meta property="og:image" content="https://www.sqlservercentral.com/wp-content/uploads/2021/03/execplan_b.png" />
+<meta property="og:image:secure_url" content="https://www.sqlservercentral.com/wp-content/uploads/2021/03/execplan_b.png" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:description" content="This is a short look at a technique that I discovered recently in Management Studio (SSMS). The technique is to compare two graphical execution plans in" />
+<meta name="twitter:title" content="Comparing Two Execution Plans &ndash; SQLServerCentral" />
+<meta name="twitter:site" content="@sqlservercentrl" />
+<meta name="twitter:image" content="https://www.sqlservercentral.com/wp-content/uploads/2021/03/execplan_b.png" />
+<meta name="twitter:creator" content="@sqlservercentrl" />
+<script type='application/ld+json' class='yoast-schema-graph yoast-schema-graph--main'>{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://www.sqlservercentral.com/#organization","name":"SQLServerCentral","url":"https://www.sqlservercentral.com/","sameAs":["https://twitter.com/sqlservercentrl"],"logo":{"@type":"ImageObject","@id":"https://www.sqlservercentral.com/#logo","url":"https://www.sqlservercentral.com/wp-content/uploads/2019/05/ssc-logo.png","width":60,"height":53,"caption":"SQLServerCentral"},"image":{"@id":"https://www.sqlservercentral.com/#logo"}},{"@type":"WebSite","@id":"https://www.sqlservercentral.com/#website","url":"https://www.sqlservercentral.com/","name":"SQLServerCentral","publisher":{"@id":"https://www.sqlservercentral.com/#organization"},"potentialAction":{"@type":"SearchAction","target":"https://www.sqlservercentral.com/?s={search_term_string}","query-input":"required name=search_term_string"}},{"@type":"ImageObject","@id":"https://www.sqlservercentral.com/articles/comparing-two-execution-plans#primaryimage","url":"https://www.sqlservercentral.com/wp-content/uploads/2021/03/execplan_b.png","width":24,"height":22,"caption":"Execution plan icon"},{"@type":"WebPage","@id":"https://www.sqlservercentral.com/articles/comparing-two-execution-plans#webpage","url":"https://www.sqlservercentral.com/articles/comparing-two-execution-plans","inLanguage":"en-GB","name":"Comparing Two Execution Plans &ndash; SQLServerCentral","isPartOf":{"@id":"https://www.sqlservercentral.com/#website"},"primaryImageOfPage":{"@id":"https://www.sqlservercentral.com/articles/comparing-two-execution-plans#primaryimage"},"datePublished":"2021-03-30T00:00:20+00:00","dateModified":"2021-03-23T00:12:18+00:00","description":"This is a short look at a technique that I discovered recently in Management Studio (SSMS). The technique is to compare two graphical execution plans in"}]}</script>
+<!-- / Yoast SEO plugin. -->
+
+<link rel='dns-prefetch' href='//cdn.rawgit.com' />
+<link rel='dns-prefetch' href='//cdnjs.cloudflare.com' />
+<link rel='dns-prefetch' href='//www.sqlservercentral.com' />
+<link rel='dns-prefetch' href='//fonts.googleapis.com' />
+<link rel='dns-prefetch' href='//s.w.org' />
+<link rel="alternate" type="application/rss+xml" title="SQLServerCentral &raquo; Feed" href="https://www.sqlservercentral.com/feed" />
+<link rel="alternate" type="application/rss+xml" title="SQLServerCentral &raquo; Comments Feed" href="https://www.sqlservercentral.com/comments/feed" />
+		<script type="text/javascript">
+			window._wpemojiSettings = {"baseUrl":"https:\/\/s.w.org\/images\/core\/emoji\/11.2.0\/72x72\/","ext":".png","svgUrl":"https:\/\/s.w.org\/images\/core\/emoji\/11.2.0\/svg\/","svgExt":".svg","source":{"concatemoji":"https:\/\/www.sqlservercentral.com\/wp-includes\/js\/wp-emoji-release.min.js?ver=5.1.1"}};
+			!function(a,b,c){function d(a,b){var c=String.fromCharCode;l.clearRect(0,0,k.width,k.height),l.fillText(c.apply(this,a),0,0);var d=k.toDataURL();l.clearRect(0,0,k.width,k.height),l.fillText(c.apply(this,b),0,0);var e=k.toDataURL();return d===e}function e(a){var b;if(!l||!l.fillText)return!1;switch(l.textBaseline="top",l.font="600 32px Arial",a){case"flag":return!(b=d([55356,56826,55356,56819],[55356,56826,8203,55356,56819]))&&(b=d([55356,57332,56128,56423,56128,56418,56128,56421,56128,56430,56128,56423,56128,56447],[55356,57332,8203,56128,56423,8203,56128,56418,8203,56128,56421,8203,56128,56430,8203,56128,56423,8203,56128,56447]),!b);case"emoji":return b=d([55358,56760,9792,65039],[55358,56760,8203,9792,65039]),!b}return!1}function f(a){var c=b.createElement("script");c.src=a,c.defer=c.type="text/javascript",b.getElementsByTagName("head")[0].appendChild(c)}var g,h,i,j,k=b.createElement("canvas"),l=k.getContext&&k.getContext("2d");for(j=Array("flag","emoji"),c.supports={everything:!0,everythingExceptFlag:!0},i=0;i<j.length;i++)c.supports[j[i]]=e(j[i]),c.supports.everything=c.supports.everything&&c.supports[j[i]],"flag"!==j[i]&&(c.supports.everythingExceptFlag=c.supports.everythingExceptFlag&&c.supports[j[i]]);c.supports.everythingExceptFlag=c.supports.everythingExceptFlag&&!c.supports.flag,c.DOMReady=!1,c.readyCallback=function(){c.DOMReady=!0},c.supports.everything||(h=function(){c.readyCallback()},b.addEventListener?(b.addEventListener("DOMContentLoaded",h,!1),a.addEventListener("load",h,!1)):(a.attachEvent("onload",h),b.attachEvent("onreadystatechange",function(){"complete"===b.readyState&&c.readyCallback()})),g=c.source||{},g.concatemoji?f(g.concatemoji):g.wpemoji&&g.twemoji&&(f(g.twemoji),f(g.wpemoji)))}(window,document,window._wpemojiSettings);
+		</script>
+		<!-- managing ads with Advanced Ads – https://wpadvancedads.com/ --><script>
+					advanced_ads_ready=function(){var fns=[],listener,doc=typeof document==="object"&&document,hack=doc&&doc.documentElement.doScroll,domContentLoaded="DOMContentLoaded",loaded=doc&&(hack?/^loaded|^c/:/^loaded|^i|^c/).test(doc.readyState);if(!loaded&&doc){listener=function(){doc.removeEventListener(domContentLoaded,listener);window.removeEventListener("load",listener);loaded=1;while(listener=fns.shift())listener()};doc.addEventListener(domContentLoaded,listener);window.addEventListener("load",listener)}return function(fn){loaded?setTimeout(fn,0):fns.push(fn)}}();
+			</script><style type="text/css">
+img.wp-smiley,
+img.emoji {
+	display: inline !important;
+	border: none !important;
+	box-shadow: none !important;
+	height: 1em !important;
+	width: 1em !important;
+	margin: 0 .07em !important;
+	vertical-align: -0.1em !important;
+	background: none !important;
+	padding: 0 !important;
+}
+</style>
+	<link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" id='wp-block-library-css'  href='https://www.sqlservercentral.com/wp-includes/css/dist/block-library/style.min.css?ver=5.1.1' type='text/css' media='all' />
+<noscript><link rel='stylesheet' id='wp-block-library-css'  href='https://www.sqlservercentral.com/wp-includes/css/dist/block-library/style.min.css?ver=5.1.1' type='text/css' media='all' /></noscript>
+
+<link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" id='ssc-widgets-mini-teaser-css'  href='https://www.sqlservercentral.com/wp-content/mu-plugins/ssc/ssc-widgets/css/mini-teaser.min.css?ver=2020-06-03' type='text/css' media='all' />
+<noscript><link rel='stylesheet' id='ssc-widgets-mini-teaser-css'  href='https://www.sqlservercentral.com/wp-content/mu-plugins/ssc/ssc-widgets/css/mini-teaser.min.css?ver=2020-06-03' type='text/css' media='all' /></noscript>
+
+<link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" id='ssc-bbp-css'  href='https://www.sqlservercentral.com/wp-content/mu-plugins/ssc/ssc-bbp/css/ssc-bbp.min.css?ver=2020-06-03' type='text/css' media='all' />
+<noscript><link rel='stylesheet' id='ssc-bbp-css'  href='https://www.sqlservercentral.com/wp-content/mu-plugins/ssc/ssc-bbp/css/ssc-bbp.min.css?ver=2020-06-03' type='text/css' media='all' /></noscript>
+
+<link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" id='ssc-briefcase-css'  href='https://www.sqlservercentral.com/wp-content/mu-plugins/ssc/ssc-briefcase/css/ssc-briefcase.min.css?ver=2020-06-03' type='text/css' media='all' />
+<noscript><link rel='stylesheet' id='ssc-briefcase-css'  href='https://www.sqlservercentral.com/wp-content/mu-plugins/ssc/ssc-briefcase/css/ssc-briefcase.min.css?ver=2020-06-03' type='text/css' media='all' /></noscript>
+
+<link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" id='ssc-contributions-css'  href='https://www.sqlservercentral.com/wp-content/mu-plugins/ssc/ssc-contributions/css/contributions.min.css?ver=2020-06-03' type='text/css' media='all' />
+<noscript><link rel='stylesheet' id='ssc-contributions-css'  href='https://www.sqlservercentral.com/wp-content/mu-plugins/ssc/ssc-contributions/css/contributions.min.css?ver=2020-06-03' type='text/css' media='all' /></noscript>
+
+<link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" id='ssc-leaderboard-css'  href='https://www.sqlservercentral.com/wp-content/mu-plugins/ssc/ssc-leaderboard/css/leaderboard.min.css?ver=2020-06-03' type='text/css' media='all' />
+<noscript><link rel='stylesheet' id='ssc-leaderboard-css'  href='https://www.sqlservercentral.com/wp-content/mu-plugins/ssc/ssc-leaderboard/css/leaderboard.min.css?ver=2020-06-03' type='text/css' media='all' /></noscript>
+
+<link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" id='ssc-related-forum-topics-top-comments-css'  href='https://www.sqlservercentral.com/wp-content/mu-plugins/ssc/ssc-related-forum-topics/css/top-comments.min.css?ver=2020-06-03' type='text/css' media='all' />
+<noscript><link rel='stylesheet' id='ssc-related-forum-topics-top-comments-css'  href='https://www.sqlservercentral.com/wp-content/mu-plugins/ssc/ssc-related-forum-topics/css/top-comments.min.css?ver=2020-06-03' type='text/css' media='all' /></noscript>
+
+<link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" id='ssc-social-css'  href='https://www.sqlservercentral.com/wp-content/mu-plugins/ssc/ssc-social/css/icons.min.css?ver=2020-06-03' type='text/css' media='all' />
+<noscript><link rel='stylesheet' id='ssc-social-css'  href='https://www.sqlservercentral.com/wp-content/mu-plugins/ssc/ssc-social/css/icons.min.css?ver=2020-06-03' type='text/css' media='all' /></noscript>
+
+<link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" id='ssc-star-ratings-css'  href='https://www.sqlservercentral.com/wp-content/mu-plugins/ssc/ssc-star-ratings/css/ssc-star-ratings.min.css?ver=2020-06-03' type='text/css' media='all' />
+<noscript><link rel='stylesheet' id='ssc-star-ratings-css'  href='https://www.sqlservercentral.com/wp-content/mu-plugins/ssc/ssc-star-ratings/css/ssc-star-ratings.min.css?ver=2020-06-03' type='text/css' media='all' /></noscript>
+
+<link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" id='ssc-syntax-highlighting-css'  href='https://www.sqlservercentral.com/wp-content/mu-plugins/ssc/ssc-syntax-highlighting/css/syntax-highlighting.min.css?ver=2020-06-03' type='text/css' media='all' />
+<noscript><link rel='stylesheet' id='ssc-syntax-highlighting-css'  href='https://www.sqlservercentral.com/wp-content/mu-plugins/ssc/ssc-syntax-highlighting/css/syntax-highlighting.min.css?ver=2020-06-03' type='text/css' media='all' /></noscript>
+
+<link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" id='ssc-syntax-highlighting-legacy-css'  href='https://www.sqlservercentral.com/wp-content/mu-plugins/ssc/ssc-syntax-highlighting/css/legacy.min.css?ver=2020-06-03' type='text/css' media='all' />
+<noscript><link rel='stylesheet' id='ssc-syntax-highlighting-legacy-css'  href='https://www.sqlservercentral.com/wp-content/mu-plugins/ssc/ssc-syntax-highlighting/css/legacy.min.css?ver=2020-06-03' type='text/css' media='all' /></noscript>
+
+<link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" id='featherlight-css-css'  href='https://cdnjs.cloudflare.com/ajax/libs/magnific-popup.js/1.1.0/magnific-popup.min.css?ver=5.1.1' type='text/css' media='all' />
+<noscript><link rel='stylesheet' id='featherlight-css-css'  href='https://cdnjs.cloudflare.com/ajax/libs/magnific-popup.js/1.1.0/magnific-popup.min.css?ver=5.1.1' type='text/css' media='all' /></noscript>
+
+<link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" id='ssc-lightbox-css-css'  href='https://www.sqlservercentral.com/wp-content/mu-plugins/ssc/ssc-lightbox/css/ssc-lightbox.min.css?ver=5.1.1' type='text/css' media='all' />
+<noscript><link rel='stylesheet' id='ssc-lightbox-css-css'  href='https://www.sqlservercentral.com/wp-content/mu-plugins/ssc/ssc-lightbox/css/ssc-lightbox.min.css?ver=5.1.1' type='text/css' media='all' /></noscript>
+
+<link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" id='bbp-default-css'  href='https://www.sqlservercentral.com/wp-content/plugins/bbpress/templates/default/css/bbpress.css?ver=2.5.14-6684' type='text/css' media='screen' />
+<noscript><link rel='stylesheet' id='bbp-default-css'  href='https://www.sqlservercentral.com/wp-content/plugins/bbpress/templates/default/css/bbpress.css?ver=2.5.14-6684' type='text/css' media='screen' /></noscript>
+
+<link rel='stylesheet' id='bbp-ssc-css'  href='https://www.sqlservercentral.com/wp-content/themes/ssc-twentyeighteen/bbpress/bbpress.min.css?ver=2.5.14-6684' type='text/css' media='screen' />
+<link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" id='gglcptch-css'  href='https://www.sqlservercentral.com/wp-content/plugins/google-captcha/css/gglcptch.css?ver=1.39' type='text/css' media='all' />
+<noscript><link rel='stylesheet' id='gglcptch-css'  href='https://www.sqlservercentral.com/wp-content/plugins/google-captcha/css/gglcptch.css?ver=1.39' type='text/css' media='all' /></noscript>
+
+<link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" id='hm_bbpui-css'  href='https://www.sqlservercentral.com/wp-content/plugins/image-upload-for-bbpress/css/bbp-image-upload.css?ver=5.1.1' type='text/css' media='all' />
+<noscript><link rel='stylesheet' id='hm_bbpui-css'  href='https://www.sqlservercentral.com/wp-content/plugins/image-upload-for-bbpress/css/bbp-image-upload.css?ver=5.1.1' type='text/css' media='all' /></noscript>
+
+<link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" id='searchandfilter-css'  href='https://www.sqlservercentral.com/wp-content/plugins/search-filter/style.css?ver=1' type='text/css' media='all' />
+<noscript><link rel='stylesheet' id='searchandfilter-css'  href='https://www.sqlservercentral.com/wp-content/plugins/search-filter/style.css?ver=1' type='text/css' media='all' /></noscript>
+
+<link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" id='ssc2018-googlefonts-css'  href='//fonts.googleapis.com/css?family=Open+Sans%3A400%2C600&#038;ver=5.1.1' type='text/css' media='all' />
+<noscript><link rel='stylesheet' id='ssc2018-googlefonts-css'  href='//fonts.googleapis.com/css?family=Open+Sans%3A400%2C600&#038;ver=5.1.1' type='text/css' media='all' /></noscript>
+
+<link rel='stylesheet' id='ssc2018-stylesheet-css'  href='https://www.sqlservercentral.com/wp-content/themes/ssc-twentyeighteen/css/style.css?ver=2020-06-03' type='text/css' media='all' />
+<link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" id='d4p-bbattachments-css-css'  href='https://www.sqlservercentral.com/wp-content/plugins/gd-bbpress-attachments/css/front.css?ver=3.1_b2302_free' type='text/css' media='all' />
+<noscript><link rel='stylesheet' id='d4p-bbattachments-css-css'  href='https://www.sqlservercentral.com/wp-content/plugins/gd-bbpress-attachments/css/front.css?ver=3.1_b2302_free' type='text/css' media='all' /></noscript>
+
+<link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" id='simple-favorites-css'  href='https://www.sqlservercentral.com/wp-content/plugins/favorites/assets/css/favorites.css?ver=2.3.1' type='text/css' media='all' />
+<noscript><link rel='stylesheet' id='simple-favorites-css'  href='https://www.sqlservercentral.com/wp-content/plugins/favorites/assets/css/favorites.css?ver=2.3.1' type='text/css' media='all' /></noscript>
+
+<link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" id='wp-user-avatar-css'  href='https://www.sqlservercentral.com/wp-content/plugins/wp-user-avatar-pro/assets/css/wp-user-avatar.css?ver=4.1.8' type='text/css' media='all' />
+<noscript><link rel='stylesheet' id='wp-user-avatar-css'  href='https://www.sqlservercentral.com/wp-content/plugins/wp-user-avatar-pro/assets/css/wp-user-avatar.css?ver=4.1.8' type='text/css' media='all' /></noscript>
+
+<link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" id='jcrop-css'  href='https://www.sqlservercentral.com/wp-includes/js/jcrop/jquery.Jcrop.min.css?ver=0.9.12' type='text/css' media='all' />
+<noscript><link rel='stylesheet' id='jcrop-css'  href='https://www.sqlservercentral.com/wp-includes/js/jcrop/jquery.Jcrop.min.css?ver=0.9.12' type='text/css' media='all' /></noscript>
+
+<script type='text/javascript' src='https://www.sqlservercentral.com/wp-includes/js/jquery/jquery.js?ver=1.12.4'></script>
+<script type='text/javascript' src='https://www.sqlservercentral.com/wp-includes/js/jquery/jquery-migrate.min.js?ver=1.4.1'></script>
+<script type='text/javascript' defer src='https://cdnjs.cloudflare.com/ajax/libs/magnific-popup.js/1.1.0/jquery.magnific-popup.min.js?ver=5.1.1'></script>
+<script type='text/javascript' defer src='https://www.sqlservercentral.com/wp-content/mu-plugins/ssc/ssc-lightbox/js/ssc-lightbox.min.js?ver=5.1.1'></script>
+<script type='text/javascript' defer src='https://www.sqlservercentral.com/wp-content/plugins/image-upload-for-bbpress/js/bbp-image-upload.js?ver=5.1.1'></script>
+<script type='text/javascript'>
+/* <![CDATA[ */
+var favorites_data = {"ajaxurl":"https:\/\/www.sqlservercentral.com\/wp-admin\/admin-ajax.php","nonce":"9a2fe0e248","favorite":"Add to briefcase <i class=\"sf-icon-star-empty\"><\/i>","favorited":"Remove from briefcase <i class=\"sf-icon-star-full\"><\/i>","includecount":"","indicate_loading":"","loading_text":"Loading","loading_image":"","loading_image_active":"","loading_image_preload":"","cache_enabled":"1","button_options":{"button_type":"custom","custom_colors":false,"box_shadow":false,"include_count":false,"default":{"background_default":false,"border_default":false,"text_default":false,"icon_default":false,"count_default":false},"active":{"background_active":false,"border_active":false,"text_active":false,"icon_active":false,"count_active":false}},"authentication_modal_content":"<p>Please login to add favorites.<\/p><p><a href=\"#\" data-favorites-modal-close>Dismiss this notice<\/a><\/p>","authentication_redirect":"","dev_mode":"","logged_in":"","user_id":"0","authentication_redirect_url":"https:\/\/www.sqlservercentral.com\/wp-login.php"};
+/* ]]> */
+</script>
+<script type='text/javascript' defer src='https://www.sqlservercentral.com/wp-content/plugins/favorites/assets/js/favorites.min.js?ver=2.3.1'></script>
+<script type='text/javascript' src='https://www.sqlservercentral.com/wp-includes/js/jcrop/jquery.Jcrop.min.js?ver=0.9.12'></script>
+<script type='text/javascript' defer src='https://www.sqlservercentral.com/wp-content/plugins/wp-user-avatar-pro/assets/js/webcam.js?ver=4.1.8'></script>
+<script type='text/javascript'>
+/* <![CDATA[ */
+var wpua_imgloader_vars = {"url":"https:\/\/www.sqlservercentral.com\/wp-admin\/admin-ajax.php","WPUA_URL":"https:\/\/www.sqlservercentral.com\/wp-content\/plugins\/wp-user-avatar-pro\/","WPUA_MEDIA":"false","wpua_webcam":"true","wpua_string":{"file_type_error":"File Type is not valid.","file_type_error_description":"Valid File Type is jpeg, png and gif.","file_size_error":"File Size is too big","file_size_error_description":"File uploading limits:  Size 8.00 MB","no_image":"Oops! Seems you didn't select any image.","no_image_instruction":"It's easy. Click within dotted area.","upload_image":"Upload Image","media_uploader":"Media Uploader","drop_instruction":"Drop image here or click to upload.","control_instruction":"Select your image, crop and save it.","close":"Close","save":"Save Image","capture_image":"Capture Image","webcam_on":"Use Camera","mediamanager_on_title":"Media Manager is turned ON.","mediamanager_on_instruction":"Click within dotted area to choose image from media manager"},"restriction":{"strickly_resize":true,"max_file_size":"8388608","max_file_width":0,"max_file_height":0,"wp_user_avatar_thumbnail_w":false,"wp_user_avatar_thumbnail_h":false}};
+/* ]]> */
+</script>
+<script type='text/javascript' defer src='https://www.sqlservercentral.com/wp-content/plugins/wp-user-avatar-pro/assets/js/wpua-imgloader.js?ver=4.1.8'></script>
+<link rel='https://api.w.org/' href='https://www.sqlservercentral.com/wp-json/' />
+<link rel="EditURI" type="application/rsd+xml" title="RSD" href="https://www.sqlservercentral.com/xmlrpc.php?rsd" />
+<link rel="wlwmanifest" type="application/wlwmanifest+xml" href="https://www.sqlservercentral.com/wp-includes/wlwmanifest.xml" /> 
+<meta name="generator" content="WordPress 5.1.1" /><meta name="projectnami:version" content="2.1.1" />
+<link rel='shortlink' href='https://www.sqlservercentral.com/?p=3861018' />
+<link rel="alternate" type="application/json+oembed" href="https://www.sqlservercentral.com/wp-json/oembed/1.0/embed?url=https%3A%2F%2Fwww.sqlservercentral.com%2Farticles%2Fcomparing-two-execution-plans" />
+<link rel="alternate" type="text/xml+oembed" href="https://www.sqlservercentral.com/wp-json/oembed/1.0/embed?url=https%3A%2F%2Fwww.sqlservercentral.com%2Farticles%2Fcomparing-two-execution-plans&#038;format=xml" />
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-90206-6"></script>
+<script>
+    const sites = [
+        'www.red-gate.com',
+        'www.sqlservercentral.com',
+        'documentation.red-gate.com',
+        'sqlmonitormetrics.red-gate.com'
+    ];
+     window.dataLayer = window.dataLayer || [];
+     function gtag(){dataLayer.push(arguments);}
+     gtag('js', new Date());  
+     gtag('config', 'UA-90206-6');
+     gtag('config', 'UA-90206-169', { 'linker': { 'domains': sites } });
+</script><script type="text/javascript">
+            /* <![CDATA[ */
+            var gdbbPressAttachmentsInit = {
+                max_files: 10            };
+            /* ]]> */
+        </script>			<style>
+			.avatar_overlays p  {
+ 				background: rgba(0, 0, 0, );
+ 				color: ;
+				}
+			.wpuap_tooltip:hover .wpuap_tooltip_content {
+		    display: inline;
+		    position: absolute;
+		    color: ;
+		    border: 1px solid ;
+		    background: 			}
+
+			.avatar_container [class^=icon-],
+			.avatar_container [class*=" icon-"] {
+			    color:  !important;
+			}
+
+			#ci-modal,.ci_controls {
+			    background-color:  !important;
+			}
+						</style>
+		</head>
+
+<body class="ssc_article-template-default single single-ssc_article postid-3861018" itemscope itemtype="http://schema.org/WebPage" >
+
+<div id="page" class="hfeed site">
+
+    <!-- HEADER -->
+    <header class="site-header band header--primary">
+        <nav>
+            <div class="header--primary__nav__inner">
+                <a href="https://www.sqlservercentral.com/" title="SQLServerCentral" rel="home" class="header--primary__app-logo-container"><img src="https://www.sqlservercentral.com/wp-content/themes/ssc-twentyeighteen/images/header/ssc-logo.svg" alt="" /></a>
+                <a href="https://www.sqlservercentral.com/" title="SQLServerCentral" rel="home" class="header--primary__app-name-container "><img src="https://www.sqlservercentral.com/wp-content/themes/ssc-twentyeighteen/images/header/ssc.svg" alt="" /></a>
+                <ul class="js-dropdown hide-on-medium">
+                    <li id="menu-item-7" class="menu-item menu-item-type-custom menu-item-object-custom current-menu-item menu-item-7"><a href="/articles">Articles</a></li>
+<li id="menu-item-8" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-8"><a href="/editorials">Editorials</a></li>
+<li id="menu-item-9" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-9"><a href="/stairways">Stairways</a></li>
+<li id="menu-item-10" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-has-children menu-item-10"><a href="/forums">Forums</a>
+<ul class="sub-menu">
+	<li id="menu-item-16" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-16"><a title="Top level for all forums" href="/forums">Forums home</a></li>
+	<li id="menu-item-3052410" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-3052410"><a title="Threads listed in reverse order by the most recent reply" href="/forums/view/topics-freshness">Active threads</a></li>
+	<li id="menu-item-18" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-18"><a title="Threads listed in reverse order by the creation date" href="/forums/view/latest-topics">Latest topics</a></li>
+	<li id="menu-item-17" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-17"><a title="Most replies in the last 24 hours" href="/forums/view/popular">Most popular</a></li>
+	<li id="menu-item-3644583" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-3644583"><a href="/totalscores#leaderboard-forum">Leaderboard</a></li>
+</ul>
+</li>
+<li id="menu-item-11" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-11"><a href="/scripts">Scripts</a></li>
+<li id="menu-item-12" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-12"><a href="/questions">QotD</a></li>
+<li id="menu-item-13" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-13"><a href="/books">Books</a></li>
+<li id="menu-item-14" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-14"><a href="https://ask.sqlservercentral.com/">Ask SSC</a></li>
+<li id="menu-item-15" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-15"><a href="/blogs">Blogs</a></li>
+                </ul>
+
+                <span class="header--primary__site-tools">
+                    <ul>
+                        <li class="hide-on-medium"><a href="/contributions"><span class="icon--edit"></span>Write for us</a></li>
+                        <li class="hide-on-max show-on-medium"><a href="/search" class="header--primary__icon icon--search" title="Search"></a></li>
+                        <li class="hide-on-max show-on-large"><a href="" class="header--primary__icon header--primary__menu-button">Menu</a></li>
+                    </ul>
+                    <ul class="js-dropdown dropdown hide-on-small">
+                                                    <li><a href="https://www.sqlservercentral.com/wp-login.php?action=register">Register</a></li>
+                            <li><a href="https://www.sqlservercentral.com/wp-login.php?redirect_to=https%3A%2F%2Fwww.sqlservercentral.com%2Farticles%2Fcomparing-two-execution-plans">Login</a></li>
+                                            </ul>
+                </span>
+            </div>
+
+            <ul class="header--primary__menu--mobile js-dropdown">
+                <li class="menu-item menu-item-type-custom menu-item-object-custom current-menu-item menu-item-7"><a href="/articles">Articles</a></li>
+<li class="menu-item menu-item-type-custom menu-item-object-custom menu-item-8"><a href="/editorials">Editorials</a></li>
+<li class="menu-item menu-item-type-custom menu-item-object-custom menu-item-9"><a href="/stairways">Stairways</a></li>
+<li class="menu-item menu-item-type-custom menu-item-object-custom menu-item-has-children menu-item-10"><a href="/forums">Forums</a>
+<ul class="sub-menu">
+	<li class="menu-item menu-item-type-custom menu-item-object-custom menu-item-16"><a title="Top level for all forums" href="/forums">Forums home</a></li>
+	<li class="menu-item menu-item-type-custom menu-item-object-custom menu-item-3052410"><a title="Threads listed in reverse order by the most recent reply" href="/forums/view/topics-freshness">Active threads</a></li>
+	<li class="menu-item menu-item-type-custom menu-item-object-custom menu-item-18"><a title="Threads listed in reverse order by the creation date" href="/forums/view/latest-topics">Latest topics</a></li>
+	<li class="menu-item menu-item-type-custom menu-item-object-custom menu-item-17"><a title="Most replies in the last 24 hours" href="/forums/view/popular">Most popular</a></li>
+	<li class="menu-item menu-item-type-custom menu-item-object-custom menu-item-3644583"><a href="/totalscores#leaderboard-forum">Leaderboard</a></li>
+</ul>
+</li>
+<li class="menu-item menu-item-type-custom menu-item-object-custom menu-item-11"><a href="/scripts">Scripts</a></li>
+<li class="menu-item menu-item-type-custom menu-item-object-custom menu-item-12"><a href="/questions">QotD</a></li>
+<li class="menu-item menu-item-type-custom menu-item-object-custom menu-item-13"><a href="/books">Books</a></li>
+<li class="menu-item menu-item-type-custom menu-item-object-custom menu-item-14"><a href="https://ask.sqlservercentral.com/">Ask SSC</a></li>
+<li class="menu-item menu-item-type-custom menu-item-object-custom menu-item-15"><a href="/blogs">Blogs</a></li>
+
+                                <li class="menu-item"><a href="/contributions">Write for us</a></li>
+
+                                    <li><a href="https://www.sqlservercentral.com/wp-login.php?action=register">Register</a></li>
+                    <li><a href="https://www.sqlservercentral.com/wp-login.php?redirect_to=https%3A%2F%2Fwww.sqlservercentral.com%2Farticles%2Fcomparing-two-execution-plans">Login</a></li>
+                            </ul>
+        </nav>
+    </header>
+    <!-- /HEADER -->
+
+    <!-- SECONDARY NAV -->
+    <nav class="background-color--grey--1 border-bottom border-color--grey--3 nav-secondary">
+        <div class="band__inner-container border-left border-right border-color--grey--3 padded--none">
+            <form class="search display--inline border-left border-right border-color--grey--3 padded-right--tight float-right" action="https://www.sqlservercentral.com/" method="get">
+                <input type="text" name="s" placeholder="Search..." value=""/>
+                <input type="image" src="https://www.sqlservercentral.com/wp-content/themes/ssc-twentyeighteen/images/nav-secondary/search-icon.svg"/>
+            </form>
+        </div>
+    </nav>
+    <!-- /SECONDARY NAV -->
+
+    
+    
+<!-- single.php -->
+    <!-- template-parts/content-single.php -->
+<div class="band">
+    <div class="band__inner-container padded--tight--small grid" itemscope itemtype="http://schema.org/Article" datePublished="">
+
+        <div itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+            <div itemprop="logo" itemscope itemtype="http://schema.org/ImageObject">
+                <meta itemprop="url" content="https://www.sqlservercentral.com/wp-content/uploads/2019/05/ssc-logo.png">
+                <meta itemprop="width" content="60"> <meta itemprop="height" content="53">
+            </div>
+            <meta itemprop="name" content="SQLServerCentral.com">
+        </div>
+
+        <meta itemprop="mainEntityOfPage" content="https://www.sqlservercentral.com/articles/comparing-two-execution-plans">
+
+        <div class="grid__col grid__col--span-2-of-12 hide-on-small content-single-sidebar-left">
+            
+    <div class="thumbnail-container">
+        <a href="https://www.sqlservercentral.com/articles/comparing-two-execution-plans" class="link-image flex flex-align--center flex-justify--center"><img src="https://www.sqlservercentral.com/wp-content/mu-plugins/ssc/ssc-post-thumbnails/images/technical-article.svg" alt="" /></a>
+    </div>
+<img class="hidden" itemprop="image" src="https://www.sqlservercentral.com/wp-content/mu-plugins/ssc/ssc-post-thumbnails/images/technical-article.png" alt="" />        </div>
+
+        <div class="grid__col grid__col--span-8-of-12">
+            <div class="padded-h spaced-bottom padded-h--none--small">
+                <h1 class="text--bold" itemprop="name">Comparing Two Execution Plans</h1>
+                <meta itemprop="headline" content="Comparing Two Execution Plans">
+                <div class="meta spaced-bottom--tight">
+                    <p class="gamma">
+                        <a href="https://www.sqlservercentral.com/author/emmittalbright" itemprop="url"><span itemprop="author" itemtype="http://schema.org/Person"><span itemprop="name">Emmitt Albright</span></span></a>,
+                        <span itemprop="datePublished"><span itemprop="dateCreated">2021-03-30</span></span>
+                        <meta itemprop="dateModified" content="March 23, 2021">
+                        <br />
+                    </p>
+                </div>
+
+                <div class="content" itemprop="articleBody">
+                    <p>This is a short look at a technique that I discovered recently in Management Studio (SSMS). The technique is to compare two graphical execution plans in the tool to understand what they are doing and how two different queries might affect a particular system, both with the image and with the properties' data behind the graphical plan.</p>
+<p>This is actually something that was added in SSMS v16, but I hadn't upgraded until relatively recently, in the v18s. I tend to use older versions of SQL Server, so I have stuck with the version of SSMS that came with them. However, with a little push from multiple developers, we have started to try and keep up with SSMS a little more closely. Most people in my organization are now running at least v18.1, though I'm not sure many have gotten past 18.6. I think we aim to try and upgrade a couple times a year.</p>
+<p>If you need to download SSMS, you can do so <a href="https://docs.microsoft.com/en-us/sql/ssms/download-sql-server-management-studio-ssms?view=sql-server-ver15">here</a>.</p>
+<h2>Generating Execution Plans</h2>
+<p>There are a few ways to get an execution plan, but I'm going to show you a simple way to do this on your own system. First, open SSMS. Then you can use CTRL+M, the menu, or the right angle shaped icon <img class="alignnone size-full wp-image-3861022" src="data:image/gif;base64,R0lGODlhAQABAPAAAPLy8v///yH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==" data-src="https://www.sqlservercentral.com/wp-content/uploads/2021/03/execplan_b.png" data-lazy-load alt="Execution plan icon" width="24" height="22" /> with boxes to get the execution plan. You can see the menu item below:</p>
+<p><img class="alignnone size-medium wp-image-3861023" src="data:image/gif;base64,R0lGODlhAQABAPAAAPLy8v///yH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==" data-src="https://www.sqlservercentral.com/wp-content/uploads/2021/03/execplan_a-300x82.png" data-lazy-load alt="Query menu item" width="300" height="82" data-srcset="https://www.sqlservercentral.com/wp-content/uploads/2021/03/execplan_a-300x82.png 300w, https://www.sqlservercentral.com/wp-content/uploads/2021/03/execplan_a.png 430w" sizes="(max-width: 300px) 100vw, 300px" /></p>
+<p>I tend to look for the actual execution plan so that I can compare two plans based on the data we have in our QA database.</p>
+<p>For this article, I am using AdventureWorks, which is freely available from Microsoft.</p>
+<p>Once I click the button, I want to run a query. At the bottom of SSMS, where I see the Results and Messages, a third tab appears with the Execution Plan. If I click anywhere in the lower plan, I get a menu that lets me save the plan.</p>
+<p><img class="alignnone size-full wp-image-3861039" src="data:image/gif;base64,R0lGODlhAQABAPAAAPLy8v///yH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==" data-src="https://www.sqlservercentral.com/wp-content/uploads/2021/03/compareplan_b.png" data-lazy-load alt="saving an execution plan" width="983" height="642" data-srcset="https://www.sqlservercentral.com/wp-content/uploads/2021/03/compareplan_b.png 983w, https://www.sqlservercentral.com/wp-content/uploads/2021/03/compareplan_b-300x196.png 300w, https://www.sqlservercentral.com/wp-content/uploads/2021/03/compareplan_b-768x502.png 768w" sizes="(max-width: 983px) 100vw, 983px" /></p>
+<p>I can save this as any name I want. I'll choose ADW1.sqlplan as the name. The default extension for execution plans is .sqlplan.</p>
+<p><img class="alignnone size-medium wp-image-3861026" src="data:image/gif;base64,R0lGODlhAQABAPAAAPLy8v///yH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==" data-src="https://www.sqlservercentral.com/wp-content/uploads/2021/03/xecplan_d-300x215.png" data-lazy-load alt="Execution Plan being Saved" width="300" height="215" data-srcset="https://www.sqlservercentral.com/wp-content/uploads/2021/03/xecplan_d-300x215.png 300w, https://www.sqlservercentral.com/wp-content/uploads/2021/03/xecplan_d.png 678w" sizes="(max-width: 300px) 100vw, 300px" /></p>
+<p>Now I have one execution plan. I can save others if I wish. However, I'm going to now change my query and find a better one. We know SELECT * is bad. I'm not going to mess with the indexes, but instead just reduce the columns I return. Now I see a completely different plan.</p>
+<p><img class="alignnone size-full wp-image-3861040" src="data:image/gif;base64,R0lGODlhAQABAPAAAPLy8v///yH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==" data-src="https://www.sqlservercentral.com/wp-content/uploads/2021/03/compareplan_c.png" data-lazy-load alt="Different execution plan" width="1097" height="641" data-srcset="https://www.sqlservercentral.com/wp-content/uploads/2021/03/compareplan_c.png 1097w, https://www.sqlservercentral.com/wp-content/uploads/2021/03/compareplan_c-300x175.png 300w, https://www.sqlservercentral.com/wp-content/uploads/2021/03/compareplan_c-768x449.png 768w, https://www.sqlservercentral.com/wp-content/uploads/2021/03/compareplan_c-1024x598.png 1024w" sizes="(max-width: 1097px) 100vw, 1097px" /></p>
+<p>I'll save this as ADW2.sqlplan.</p>
+<h2>Comparing Plans</h2>
+<p>I want to compare this one with the previous one. I could have a separate tab group, or two instances of SSMS or something else. However, I'll now right click in the new plan and look at the menu. I see this, which includes the "Compare showplan" option.</p>
+<p><img class="alignnone size-medium wp-image-3861028" src="data:image/gif;base64,R0lGODlhAQABAPAAAPLy8v///yH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==" data-src="https://www.sqlservercentral.com/wp-content/uploads/2021/03/execplan_f-300x169.png" data-lazy-load alt="Context menu for execution plan" width="300" height="169" data-srcset="https://www.sqlservercentral.com/wp-content/uploads/2021/03/execplan_f-300x169.png 300w, https://www.sqlservercentral.com/wp-content/uploads/2021/03/execplan_f-128x72.png 128w, https://www.sqlservercentral.com/wp-content/uploads/2021/03/execplan_f.png 587w" sizes="(max-width: 300px) 100vw, 300px" /></p>
+<p>If I pick that, I get an Explorer box to pick a new plan. I'll pick ADW1.sqlplan. This opens up the plans and gives me both plans at the same time.</p>
+<p><img class="alignnone size-full wp-image-3861041" src="data:image/gif;base64,R0lGODlhAQABAPAAAPLy8v///yH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==" data-src="https://www.sqlservercentral.com/wp-content/uploads/2021/03/2021-03-22-18_07_43-Showplan-Comparison-Microsoft-SQL-Server-Management-Studio.png" data-lazy-load alt="Showing two graphical plans in SSMS" width="1187" height="907" data-srcset="https://www.sqlservercentral.com/wp-content/uploads/2021/03/2021-03-22-18_07_43-Showplan-Comparison-Microsoft-SQL-Server-Management-Studio.png 1187w, https://www.sqlservercentral.com/wp-content/uploads/2021/03/2021-03-22-18_07_43-Showplan-Comparison-Microsoft-SQL-Server-Management-Studio-300x229.png 300w, https://www.sqlservercentral.com/wp-content/uploads/2021/03/2021-03-22-18_07_43-Showplan-Comparison-Microsoft-SQL-Server-Management-Studio-768x587.png 768w, https://www.sqlservercentral.com/wp-content/uploads/2021/03/2021-03-22-18_07_43-Showplan-Comparison-Microsoft-SQL-Server-Management-Studio-1024x782.png 1024w" sizes="(max-width: 1187px) 100vw, 1187px" /></p>
+<p>In the image above, I see the two plans, one of which is a little simpler than the other. I also see an analysis at the bottom, which may or may not have some different information for each query. I can see which query is which in the text above the icons, and then see how different thicknesses of arrows might be changing how the plan works.</p>
+<p>On the right side of SSMS, I have both sets of properties.  As you can see in the image below, the right plan (without SELECT *) has a lower cost and the plan compilation ended early. A good enough plan works for this one.</p>
+<p><img class="alignnone size-full wp-image-3861042" src="data:image/gif;base64,R0lGODlhAQABAPAAAPLy8v///yH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==" data-src="https://www.sqlservercentral.com/wp-content/uploads/2021/03/2021-03-22-18_07_54-Showplan-Comparison-Microsoft-SQL-Server-Management-Studio.png" data-lazy-load alt="Comparing properties for two plans" width="554" height="482" data-srcset="https://www.sqlservercentral.com/wp-content/uploads/2021/03/2021-03-22-18_07_54-Showplan-Comparison-Microsoft-SQL-Server-Management-Studio.png 554w, https://www.sqlservercentral.com/wp-content/uploads/2021/03/2021-03-22-18_07_54-Showplan-Comparison-Microsoft-SQL-Server-Management-Studio-300x261.png 300w" sizes="(max-width: 554px) 100vw, 554px" /></p>
+<h2>Summary</h2>
+<p>This is a quick article to show you how to compare two plans. You can even do this if you open a showplan directly from File|Open File, and then right click to open a second one.</p>
+<p>This doesn't mean I get better queries, or even that I pick a good query. It is will up to me to tune the queries appropriately, set indexes, and understand how execution plans work. That is something you need to know, and you might check out Grant Fritchey's <a href="https://www.sqlservercentral.com/books/sql-server-execution-plans-third-edition-by-grant-fritchey">SQL Server Execution Plans</a>. This is, however, a tool to help you start to experiment with different code and see what the impact is on your query performance.</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+                </div>
+
+                                                    
+                                    
+<ul class="ssc-books-links">
+    
+    
+    
+    
+    
+    
+    
+    
+    </ul>
+
+                
+                                                    
+                                                    
+                                                    
+            </div>
+        </div>
+
+        <div class="grid__col grid__col--span-2-of-12 content-single-sidebar">
+            <div class="sidebar">
+    <aside class="sidebar__widget sidebar__widget--advads_ad_widget-4 sqlse-widget clearfix"><a href="https://www.red-gate.com/solutions/database-devops/report-2021?utm_source=ssc&#038;utm_medium=pubad&#038;utm_campaign=databasedevops&#038;utm_content=soddreport2021"><img   src='https://www.sqlservercentral.com/wp-content/uploads/2021/03/sidebar-2021_database_devops_report.png' alt=''  width="100%"  style="max-width:100%;"/></a></aside></div>            <!-- template-parts/content-single-sidebar-meta.php -->
+
+    <div class="spaced-bottom">
+        
+        <div data-target="ssc-visitor-counter">
+            <!-- Target for ssc-visitor-counter.js, which dynamically injects
+            right here visitor stats for the current post or page. -->
+        </div>
+    </div>
+
+    <div class="spaced-bottom">
+        <h2 class="gamma">Rate</h2>
+        
+<div class="ssc-star-rating ssc-star-rating--interactive" itemprop="aggregateRating" itemscope itemtype="http://schema.org/AggregateRating" data-target="ssc-star-rating" data-post="3861018">
+
+            <meta itemprop="ratingValue" content="5" />
+        <meta itemprop="ratingCount" content="4" />
+    
+    <div class="ssc-star-rating__inner">
+
+        
+        <div class="ssc-star-rating__average">
+                                            <span class="ssc-star-rating__star ssc-star-rating__star--full  ssc-star-rating__star--active">★</span>
+                <span class="ssc-star-rating__star ssc-star-rating__star--half  ssc-star-rating__star--active">★</span>
+                                            <span class="ssc-star-rating__star ssc-star-rating__star--full  ssc-star-rating__star--active">★</span>
+                <span class="ssc-star-rating__star ssc-star-rating__star--half  ssc-star-rating__star--active">★</span>
+                                            <span class="ssc-star-rating__star ssc-star-rating__star--full  ssc-star-rating__star--active">★</span>
+                <span class="ssc-star-rating__star ssc-star-rating__star--half  ssc-star-rating__star--active">★</span>
+                                            <span class="ssc-star-rating__star ssc-star-rating__star--full  ssc-star-rating__star--active">★</span>
+                <span class="ssc-star-rating__star ssc-star-rating__star--half  ssc-star-rating__star--active">★</span>
+                                            <span class="ssc-star-rating__star ssc-star-rating__star--full  ssc-star-rating__star--active">★</span>
+                <span class="ssc-star-rating__star ssc-star-rating__star--half  ssc-star-rating__star--active">★</span>
+                    </div>
+
+        
+                    <div class="ssc-star-rating__vote" hidden style="display: none;">
+                                                        <span class="ssc-star-rating__star ssc-star-rating__star--vote">★</span>
+                                                        <span class="ssc-star-rating__star ssc-star-rating__star--vote">★</span>
+                                                        <span class="ssc-star-rating__star ssc-star-rating__star--vote">★</span>
+                                                        <span class="ssc-star-rating__star ssc-star-rating__star--vote">★</span>
+                                                        <span class="ssc-star-rating__star ssc-star-rating__star--vote">★</span>
+                            </div>
+            </div>
+
+            <p class="ssc-star-rating__stats">
+            <span data-target="ssc-star-rating-score">5</span>
+            (<span data-target="ssc-star-rating-count">4</span>)
+        </p>
+    
+        <p class="ssc-star-rating__login-notice">
+        <a href="/wp-login.php?redirect_to=https://www.sqlservercentral.com/articles/comparing-two-execution-plans">Log in</a> or <a href="/wp-login.php?action=register">register</a> to rate
+    </p>
+</div>
+    </div>
+
+    <div class="spaced-bottom">
+        
+<!-- template-parts/ssc-social-icons.php -->
+<h2 class="gamma">Share</h2>
+<ul class="sharing list--horizontal">
+            <li><a class="sharing__link sharing__link--email" title="Email" target="" href="mailto:?subject=Article on https://www.sqlservercentral.com: Comparing Two Execution Plans&body=I found this great article on https://www.sqlservercentral.com.%0D%0A%0D%0A
+It's called Comparing Two Execution Plans.%0D%0A%0D%0A
+You can find it here http://www.sqlservercentral.com/articles/comparing-two-execution-plans."></a></li>
+            <li><a class="sharing__link sharing__link--facebook" title="Share on Facebook" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=http://www.sqlservercentral.com/articles/comparing-two-execution-plans&quote=Comparing Two Execution Plans"></a></li>
+            <li><a class="sharing__link sharing__link--twitter" title="Tweet" target="_blank" href="https://twitter.com/intent/tweet?source=http://www.sqlservercentral.com/articles/comparing-two-execution-plans&text=Comparing Two Execution Plans:%20http://www.sqlservercentral.com/articles/comparing-two-execution-plans"></a></li>
+            <li><a class="sharing__link sharing__link--linked-in" title="Share on LinkedIn" target="_blank" href="http://www.linkedin.com/shareArticle?mini=true&url=http://www.sqlservercentral.com/articles/comparing-two-execution-plans&title=Comparing Two Execution Plans&summary=This is a short look at a technique that I discovered recently in Management Studio (SSMS). The&source=http://www.sqlservercentral.com/articles/comparing-two-execution-plans"></a></li>
+            <li><a class="sharing__link sharing__link--print" title="Print" target="" href="javascript:window.print && window.print();"></a></li>
+    </ul>
+<!-- / template-parts/ssc-social-icons.php -->
+    </div>
+
+
+
+        <div class="post__tags spaced-bottom">
+            <h2 class="gamma">Categories</h2>
+            <ul class="list--bare">
+                                                        <li><a href="https://www.sqlservercentral.com/categories/performance-tuning" class="label background-color--blue--1 color--blue--8">Performance Tuning</a></li>
+                            </ul>
+        </div>
+    
+
+<meta itemprop="keywords" content="Performance Tuning">
+
+<!-- / template-parts/content-single-sidebar-meta.php -->
+        </div>
+    </div>
+</div>
+
+<!-- template-parts/content-single-meta.php -->
+<div class="band content-single-meta">
+    <div class="band__inner-container padded--tight--small padded-top--none grid">
+        <div class="grid__row spaced-bottom">
+            <div class="grid__col grid__col--span-10-of-12 grid__col--push-2-of-12">
+                <div class="padded-left padded-h--none--small clearfix">
+
+                                            <p><a href="https://www.sqlservercentral.com/forums/topic/comparing-two-execution-plans"><strong>Join the discussion and add your comment</strong></a></p>                    
+                                            
+        <div data-target="ssc-related-forum-topics-top-comments">
+            <!-- Target for ssc-related-forum-topics/top-comments.js. -->
+        </div>
+                    
+                </div>
+            </div>
+        </div>
+
+        <div class="grid__row hide-on-small">
+            <div class="grid__col grid__col--span-10-of-12 grid__col--push-2-of-12">
+                <div class="padded-left padded-h--none--small clearfix">
+
+                                            <div class="grid__col grid__col--span-3-of-12">
+                            
+<!-- template-parts/ssc-social-icons.php -->
+<h2 class="gamma">Share</h2>
+<ul class="sharing list--horizontal">
+            <li><a class="sharing__link sharing__link--email" title="Email" target="" href="mailto:?subject=Article on https://www.sqlservercentral.com: Comparing Two Execution Plans&body=I found this great article on https://www.sqlservercentral.com.%0D%0A%0D%0A
+It's called Comparing Two Execution Plans.%0D%0A%0D%0A
+You can find it here http://www.sqlservercentral.com/articles/comparing-two-execution-plans."></a></li>
+            <li><a class="sharing__link sharing__link--facebook" title="Share on Facebook" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=http://www.sqlservercentral.com/articles/comparing-two-execution-plans&quote=Comparing Two Execution Plans"></a></li>
+            <li><a class="sharing__link sharing__link--twitter" title="Tweet" target="_blank" href="https://twitter.com/intent/tweet?source=http://www.sqlservercentral.com/articles/comparing-two-execution-plans&text=Comparing Two Execution Plans:%20http://www.sqlservercentral.com/articles/comparing-two-execution-plans"></a></li>
+            <li><a class="sharing__link sharing__link--linked-in" title="Share on LinkedIn" target="_blank" href="http://www.linkedin.com/shareArticle?mini=true&url=http://www.sqlservercentral.com/articles/comparing-two-execution-plans&title=Comparing Two Execution Plans&summary=This is a short look at a technique that I discovered recently in Management Studio (SSMS). The&source=http://www.sqlservercentral.com/articles/comparing-two-execution-plans"></a></li>
+            <li><a class="sharing__link sharing__link--print" title="Print" target="" href="javascript:window.print && window.print();"></a></li>
+    </ul>
+<!-- / template-parts/ssc-social-icons.php -->
+                        </div>
+                    
+                                            <div class="grid__col grid__col--span-3-of-12">
+                            <h2 class="gamma">Rate</h2>
+                            
+<div class="ssc-star-rating ssc-star-rating--interactive" data-target="ssc-star-rating" data-post="3861018">
+
+    
+    <div class="ssc-star-rating__inner">
+
+        
+        <div class="ssc-star-rating__average">
+                                            <span class="ssc-star-rating__star ssc-star-rating__star--full  ssc-star-rating__star--active">★</span>
+                <span class="ssc-star-rating__star ssc-star-rating__star--half  ssc-star-rating__star--active">★</span>
+                                            <span class="ssc-star-rating__star ssc-star-rating__star--full  ssc-star-rating__star--active">★</span>
+                <span class="ssc-star-rating__star ssc-star-rating__star--half  ssc-star-rating__star--active">★</span>
+                                            <span class="ssc-star-rating__star ssc-star-rating__star--full  ssc-star-rating__star--active">★</span>
+                <span class="ssc-star-rating__star ssc-star-rating__star--half  ssc-star-rating__star--active">★</span>
+                                            <span class="ssc-star-rating__star ssc-star-rating__star--full  ssc-star-rating__star--active">★</span>
+                <span class="ssc-star-rating__star ssc-star-rating__star--half  ssc-star-rating__star--active">★</span>
+                                            <span class="ssc-star-rating__star ssc-star-rating__star--full  ssc-star-rating__star--active">★</span>
+                <span class="ssc-star-rating__star ssc-star-rating__star--half  ssc-star-rating__star--active">★</span>
+                    </div>
+
+        
+                    <div class="ssc-star-rating__vote" hidden style="display: none;">
+                                                        <span class="ssc-star-rating__star ssc-star-rating__star--vote">★</span>
+                                                        <span class="ssc-star-rating__star ssc-star-rating__star--vote">★</span>
+                                                        <span class="ssc-star-rating__star ssc-star-rating__star--vote">★</span>
+                                                        <span class="ssc-star-rating__star ssc-star-rating__star--vote">★</span>
+                                                        <span class="ssc-star-rating__star ssc-star-rating__star--vote">★</span>
+                            </div>
+            </div>
+
+            <p class="ssc-star-rating__stats">
+            <span data-target="ssc-star-rating-score">5</span>
+            (<span data-target="ssc-star-rating-count">4</span>)
+        </p>
+    
+        <p class="ssc-star-rating__login-notice">
+        <a href="/wp-login.php?redirect_to=https://www.sqlservercentral.com/articles/comparing-two-execution-plans">Log in</a> or <a href="/wp-login.php?action=register">register</a> to rate
+    </p>
+</div>
+                        </div>
+                    
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- / template-parts/content-single-meta.php -->
+
+
+<!-- template-parts/ssc-related-content-list.php -->
+<div class="band border-top border-color--grey--3 related-content">
+    <div class="band__inner-container grid">
+        <div class="grid__row">
+            <div class="grid__col grid__col--span-10-of-12 grid__col--push-2-of-12">
+                <h1 class="text--normal padded-h padded-h--none--small spaced-bottom">Related content</h1>
+            </div>
+        </div>
+
+        
+<!-- template-parts/ssc-related-content-list-item.php -->
+
+<!-- template-parts/content-loop.php -->
+<article class="grid__row spaced-bottom post-listing__post">
+
+        <div class="grid__col grid__col--span-2-of-12">
+        
+    <div class="thumbnail-container">
+        <a href="https://www.sqlservercentral.com/articles/fixing-mls-python-services-to-load-the-runtime" class="link-image flex flex-align--center flex-justify--center"><img src="https://www.sqlservercentral.com/wp-content/mu-plugins/ssc/ssc-post-thumbnails/images/technical-article.svg" alt="" /></a>
+    </div>
+    </div>
+
+    
+    <div class="grid__col grid__col--span-8-of-12">
+        <div class="padded-h padded-h--none--small">
+            <h1 class="beta">
+                                    <a href="https://www.sqlservercentral.com/articles/fixing-mls-python-services-to-load-the-runtime">Fixing MLS Python Services to Load the Runtime</a>
+                            </h1>
+
+                            <div class="post-listing__taxonomies">
+                    <ul class="post-listing__author list--horizontal list--bare display--inline">
+                        <li>by <a href="https://www.sqlservercentral.com/author/emmittalbright" itemprop="url"><span itemprop="author" itemtype="http://schema.org/Person"><span itemprop="name">Emmitt Albright</span></span></a></li>
+                    </ul>
+
+                                            <ul class="post-listing__sources list--horizontal list--bare display--inline">
+                            <li><a href="https://www.sqlservercentral.com">SQLServerCentral</a></li>
+                        </ul>
+                    
+                                            <ul class="post-listing__categories list--horizontal list--bare display--inline">
+                                                            <li><a href="https://www.sqlservercentral.com/categories/administration">Administration</a></li>
+                                                            <li><a href="https://www.sqlservercentral.com/categories/machine-learning-services-mls">Machine Learning Services (MLS)</a></li>
+                                                            <li><a href="https://www.sqlservercentral.com/categories/python">Python</a></li>
+                                                    </ul>
+                    
+                                    </div>
+            
+            <p>Recently I went to work on a SQL Server 2017 instance and couldn't get the Python runtime to load. I'd keep getting this error: A strange error for me to see, and one that didn't quite make sense. How can the runtime not launch? However, restarting the instance still resulted in this error: Msg 39021, [&hellip;]</p>
+
+                            
+<ul class="ssc-books-links">
+    
+    
+    
+    
+    
+    
+    
+    
+    </ul>
+
+            
+        </div>
+    </div>
+
+                        <div class="grid__col grid__col--span-2-of-12">
+                
+<div class="ssc-star-rating">
+
+    
+    <div class="ssc-star-rating__inner">
+
+        
+        <div class="ssc-star-rating__average">
+                                            <span class="ssc-star-rating__star ssc-star-rating__star--full ">★</span>
+                <span class="ssc-star-rating__star ssc-star-rating__star--half ">★</span>
+                                            <span class="ssc-star-rating__star ssc-star-rating__star--full ">★</span>
+                <span class="ssc-star-rating__star ssc-star-rating__star--half ">★</span>
+                                            <span class="ssc-star-rating__star ssc-star-rating__star--full ">★</span>
+                <span class="ssc-star-rating__star ssc-star-rating__star--half ">★</span>
+                                            <span class="ssc-star-rating__star ssc-star-rating__star--full ">★</span>
+                <span class="ssc-star-rating__star ssc-star-rating__star--half ">★</span>
+                                            <span class="ssc-star-rating__star ssc-star-rating__star--full ">★</span>
+                <span class="ssc-star-rating__star ssc-star-rating__star--half ">★</span>
+                    </div>
+
+        
+            </div>
+
+    
+        <p class="ssc-star-rating__login-notice">
+        <a href="/wp-login.php?redirect_to=https://www.sqlservercentral.com/articles/fixing-mls-python-services-to-load-the-runtime">Log in</a> or <a href="/wp-login.php?action=register">register</a> to rate
+    </p>
+</div>
+
+                <p class="spaced-bottom--none"><span itemprop="dateCreated">2019-10-24</span></p>
+                                    <p class="spaced-bottom--none">2,787 reads</p>
+                                <ul class="list--bare list--horizontal spaced-bottom--none">
+                    <li class="spaced-right--tight"><a href="https://www.sqlservercentral.com/forums/topic/fixing-mls-python-services-to-load-the-runtime">Discuss</a></li>
+                </ul>
+            </div>
+            
+</article>
+
+<!-- / template-parts/ssc-related-content-list-item.php -->
+
+<!-- template-parts/ssc-related-content-list-item.php -->
+
+<!-- template-parts/content-loop.php -->
+<article class="grid__row spaced-bottom post-listing__post">
+
+        <div class="grid__col grid__col--span-2-of-12">
+        
+    <div class="thumbnail-container">
+        <a href="https://www.sqlservercentral.com/articles/optimize-your-sql-by-reformulating-the-spec" class="link-image flex flex-align--center flex-justify--center"><img src="https://www.sqlservercentral.com/wp-content/mu-plugins/ssc/ssc-post-thumbnails/images/technical-article.svg" alt="" /></a>
+    </div>
+    </div>
+
+    
+    <div class="grid__col grid__col--span-8-of-12">
+        <div class="padded-h padded-h--none--small">
+            <h1 class="beta">
+                                    <a href="https://www.sqlservercentral.com/articles/optimize-your-sql-by-reformulating-the-spec">Optimize Your SQL by Reformulating the Spec</a>
+                            </h1>
+
+                            <div class="post-listing__taxonomies">
+                    <ul class="post-listing__author list--horizontal list--bare display--inline">
+                        <li>by <a href="https://www.sqlservercentral.com/author/jacobsp" itemprop="url"><span itemprop="author" itemtype="http://schema.org/Person"><span itemprop="name">Phil Jacobs</span></span></a></li>
+                    </ul>
+
+                                            <ul class="post-listing__sources list--horizontal list--bare display--inline">
+                            <li><a href="https://www.sqlservercentral.com">SQLServerCentral</a></li>
+                        </ul>
+                    
+                                            <ul class="post-listing__categories list--horizontal list--bare display--inline">
+                                                            <li><a href="https://www.sqlservercentral.com/categories/aggregates">Aggregates</a></li>
+                                                            <li><a href="https://www.sqlservercentral.com/categories/arithmetic">Arithmetic</a></li>
+                                                            <li><a href="https://www.sqlservercentral.com/categories/arithmetic-expression">arithmetic expression</a></li>
+                                                            <li><a href="https://www.sqlservercentral.com/categories/cte">CTE</a></li>
+                                                            <li><a href="https://www.sqlservercentral.com/categories/math">math</a></li>
+                                                            <li><a href="https://www.sqlservercentral.com/categories/performance-tuning">Performance Tuning</a></li>
+                                                            <li><a href="https://www.sqlservercentral.com/categories/performancetuning">PerformanceTuning</a></li>
+                                                            <li><a href="https://www.sqlservercentral.com/categories/query-optimization">Query Optimization</a></li>
+                                                            <li><a href="https://www.sqlservercentral.com/categories/query-performance">Query performance</a></li>
+                                                            <li><a href="https://www.sqlservercentral.com/categories/query-tuning">Query Tuning</a></li>
+                                                            <li><a href="https://www.sqlservercentral.com/categories/queryperformance">queryperformance</a></li>
+                                                    </ul>
+                    
+                                    </div>
+            
+            <p>As SQL developers, we tend to think of performance tuning in terms of crafting the best table indices, avoiding scalar and table valued functions, and analyzing query plans (among other things).  But sometimes going back to the spec and applying some properties of elementary math can be the best way to begin to improve performance of SQL queries which implement mathematical formulas.  This article is a case study of how I used this technique to optimize my SQL implementation of the Inverse Simpson Index.</p>
+
+                            
+<ul class="ssc-books-links">
+    
+    
+    
+    
+    
+    
+    
+    
+    </ul>
+
+            
+        </div>
+    </div>
+
+                        <div class="grid__col grid__col--span-2-of-12">
+                
+<div class="ssc-star-rating">
+
+    
+    <div class="ssc-star-rating__inner">
+
+        
+        <div class="ssc-star-rating__average">
+                                            <span class="ssc-star-rating__star ssc-star-rating__star--full  ssc-star-rating__star--active">★</span>
+                <span class="ssc-star-rating__star ssc-star-rating__star--half  ssc-star-rating__star--active">★</span>
+                                            <span class="ssc-star-rating__star ssc-star-rating__star--full  ssc-star-rating__star--active">★</span>
+                <span class="ssc-star-rating__star ssc-star-rating__star--half  ssc-star-rating__star--active">★</span>
+                                            <span class="ssc-star-rating__star ssc-star-rating__star--full  ssc-star-rating__star--active">★</span>
+                <span class="ssc-star-rating__star ssc-star-rating__star--half  ssc-star-rating__star--active">★</span>
+                                            <span class="ssc-star-rating__star ssc-star-rating__star--full  ssc-star-rating__star--active">★</span>
+                <span class="ssc-star-rating__star ssc-star-rating__star--half  ssc-star-rating__star--active">★</span>
+                                            <span class="ssc-star-rating__star ssc-star-rating__star--full  ssc-star-rating__star--active">★</span>
+                <span class="ssc-star-rating__star ssc-star-rating__star--half  ssc-star-rating__star--active">★</span>
+                    </div>
+
+        
+            </div>
+
+            <p class="ssc-star-rating__stats">
+            <span data-target="ssc-star-rating-score">5</span>
+            (<span data-target="ssc-star-rating-count">2</span>)
+        </p>
+    
+        <p class="ssc-star-rating__login-notice">
+        <a href="/wp-login.php?redirect_to=https://www.sqlservercentral.com/articles/optimize-your-sql-by-reformulating-the-spec">Log in</a> or <a href="/wp-login.php?action=register">register</a> to rate
+    </p>
+</div>
+
+                <p class="spaced-bottom--none"><span itemprop="dateCreated">2019-09-12</span></p>
+                                    <p class="spaced-bottom--none">2,876 reads</p>
+                                <ul class="list--bare list--horizontal spaced-bottom--none">
+                    <li class="spaced-right--tight"><a href="https://www.sqlservercentral.com/forums/topic/optimize-your-sql-by-reformulating-the-spec">Discuss</a></li>
+                </ul>
+            </div>
+            
+</article>
+
+<!-- / template-parts/ssc-related-content-list-item.php -->
+
+<!-- template-parts/ssc-related-content-list-item.php -->
+
+<!-- template-parts/content-loop.php -->
+<article class="grid__row spaced-bottom post-listing__post">
+
+        <div class="grid__col grid__col--span-2-of-12">
+        
+    <div class="thumbnail-container">
+        <a href="https://www.sqlservercentral.com/articles/key-rotation-in-tde" class="link-image flex flex-align--center flex-justify--center"><img src="https://www.sqlservercentral.com/wp-content/mu-plugins/ssc/ssc-post-thumbnails/images/technical-article.svg" alt="" /></a>
+    </div>
+    </div>
+
+    
+    <div class="grid__col grid__col--span-8-of-12">
+        <div class="padded-h padded-h--none--small">
+            <h1 class="beta">
+                                    <a href="https://www.sqlservercentral.com/articles/key-rotation-in-tde">Key Rotation in TDE</a>
+                            </h1>
+
+                            <div class="post-listing__taxonomies">
+                    <ul class="post-listing__author list--horizontal list--bare display--inline">
+                        <li>by <a href="https://www.sqlservercentral.com/author/emmittalbright" itemprop="url"><span itemprop="author" itemtype="http://schema.org/Person"><span itemprop="name">Emmitt Albright</span></span></a></li>
+                    </ul>
+
+                                            <ul class="post-listing__sources list--horizontal list--bare display--inline">
+                            <li><a href="https://www.sqlservercentral.com">SQLServerCentral</a></li>
+                        </ul>
+                    
+                                            <ul class="post-listing__categories list--horizontal list--bare display--inline">
+                                                            <li><a href="https://www.sqlservercentral.com/categories/transparent-data-encryption-tde">Transparent Data Encryption (TDE)</a></li>
+                                                    </ul>
+                    
+                                    </div>
+            
+            <p>Transparent Data Encryption (TDE) has been around for a long time. It first appeared in SQL Server 2008, and after a rocky start with some bugs, it has become a regularly used feature for many organizations. While not perfect, it does provide some protection and auditors like to see physical protection features being used. It's [&hellip;]</p>
+
+                            
+<ul class="ssc-books-links">
+    
+    
+    
+    
+    
+    
+    
+    
+    </ul>
+
+            
+        </div>
+    </div>
+
+                        <div class="grid__col grid__col--span-2-of-12">
+                
+<div class="ssc-star-rating">
+
+    
+    <div class="ssc-star-rating__inner">
+
+        
+        <div class="ssc-star-rating__average">
+                                            <span class="ssc-star-rating__star ssc-star-rating__star--full ">★</span>
+                <span class="ssc-star-rating__star ssc-star-rating__star--half ">★</span>
+                                            <span class="ssc-star-rating__star ssc-star-rating__star--full ">★</span>
+                <span class="ssc-star-rating__star ssc-star-rating__star--half ">★</span>
+                                            <span class="ssc-star-rating__star ssc-star-rating__star--full ">★</span>
+                <span class="ssc-star-rating__star ssc-star-rating__star--half ">★</span>
+                                            <span class="ssc-star-rating__star ssc-star-rating__star--full ">★</span>
+                <span class="ssc-star-rating__star ssc-star-rating__star--half ">★</span>
+                                            <span class="ssc-star-rating__star ssc-star-rating__star--full ">★</span>
+                <span class="ssc-star-rating__star ssc-star-rating__star--half ">★</span>
+                    </div>
+
+        
+            </div>
+
+    
+        <p class="ssc-star-rating__login-notice">
+        <a href="/wp-login.php?redirect_to=https://www.sqlservercentral.com/articles/key-rotation-in-tde">Log in</a> or <a href="/wp-login.php?action=register">register</a> to rate
+    </p>
+</div>
+
+                <p class="spaced-bottom--none"><span itemprop="dateCreated">2019-08-29</span></p>
+                                    <p class="spaced-bottom--none">6,527 reads</p>
+                                <ul class="list--bare list--horizontal spaced-bottom--none">
+                    <li class="spaced-right--tight"><a href="https://www.sqlservercentral.com/forums/topic/key-rotation-in-tde">Discuss</a></li>
+                </ul>
+            </div>
+            
+</article>
+
+<!-- / template-parts/ssc-related-content-list-item.php -->
+
+<!-- template-parts/ssc-related-content-list-item.php -->
+
+<!-- template-parts/content-loop.php -->
+<article class="grid__row spaced-bottom post-listing__post">
+
+        <div class="grid__col grid__col--span-2-of-12">
+        
+    <div class="thumbnail-container">
+        <a href="https://www.sqlservercentral.com/steps/the-basics-level-1-of-the-stairway-to-query-store" class="link-image flex flex-align--center flex-justify--center"><img src="https://www.sqlservercentral.com/wp-content/uploads/2019/05/Stairway-Icon-QueryStore.jpg" class="attachment-post-thumbnail size-post-thumbnail wp-post-image" alt="" /></a>
+    </div>
+    </div>
+
+    
+    <div class="grid__col grid__col--span-8-of-12">
+        <div class="padded-h padded-h--none--small">
+            <h1 class="beta">
+                                    <a href="https://www.sqlservercentral.com/steps/the-basics-level-1-of-the-stairway-to-query-store">The Basics - Level 1 of the Stairway to Query Store</a>
+                            </h1>
+
+                            <div class="post-listing__taxonomies">
+                    <ul class="post-listing__author list--horizontal list--bare display--inline">
+                        <li>by <a href="https://www.sqlservercentral.com/author/carlos10robles" itemprop="url"><span itemprop="author" itemtype="http://schema.org/Person"><span itemprop="name">Carlos Robles</span></span></a></li>
+                    </ul>
+
+                                            <ul class="post-listing__sources list--horizontal list--bare display--inline">
+                            <li><a href="https://www.sqlservercentral.com">SQLServerCentral</a></li>
+                        </ul>
+                    
+                                            <ul class="post-listing__categories list--horizontal list--bare display--inline">
+                                                            <li><a href="https://www.sqlservercentral.com/categories/performance-tuning">Performance Tuning</a></li>
+                                                            <li><a href="https://www.sqlservercentral.com/categories/query-data-store-qds">Query Data Store (QDS)</a></li>
+                                                            <li><a href="https://www.sqlservercentral.com/categories/stairway-series">Stairway Series</a></li>
+                                                    </ul>
+                    
+                                    </div>
+            
+            <p>Introduction Instead of going straight into the topic of the Query Store, I would like to start this Stairway Series by mentioning a few performance tuning scenarios that are very common to production DBAs. I think most of us have been in one of these situations at some time: An application experiencing slowness after a [&hellip;]</p>
+
+                            
+<ul class="ssc-books-links">
+    
+    
+    
+    
+    
+    
+    
+    
+    </ul>
+
+            
+        </div>
+    </div>
+
+                        <div class="grid__col grid__col--span-2-of-12">
+                
+<div class="ssc-star-rating">
+
+    
+    <div class="ssc-star-rating__inner">
+
+        
+        <div class="ssc-star-rating__average">
+                                            <span class="ssc-star-rating__star ssc-star-rating__star--full  ssc-star-rating__star--active">★</span>
+                <span class="ssc-star-rating__star ssc-star-rating__star--half  ssc-star-rating__star--active">★</span>
+                                            <span class="ssc-star-rating__star ssc-star-rating__star--full  ssc-star-rating__star--active">★</span>
+                <span class="ssc-star-rating__star ssc-star-rating__star--half  ssc-star-rating__star--active">★</span>
+                                            <span class="ssc-star-rating__star ssc-star-rating__star--full  ssc-star-rating__star--active">★</span>
+                <span class="ssc-star-rating__star ssc-star-rating__star--half  ssc-star-rating__star--active">★</span>
+                                            <span class="ssc-star-rating__star ssc-star-rating__star--full  ssc-star-rating__star--active">★</span>
+                <span class="ssc-star-rating__star ssc-star-rating__star--half  ssc-star-rating__star--active">★</span>
+                                            <span class="ssc-star-rating__star ssc-star-rating__star--full  ssc-star-rating__star--active">★</span>
+                <span class="ssc-star-rating__star ssc-star-rating__star--half  ssc-star-rating__star--active">★</span>
+                    </div>
+
+        
+            </div>
+
+            <p class="ssc-star-rating__stats">
+            <span data-target="ssc-star-rating-score">4.8</span>
+            (<span data-target="ssc-star-rating-count">5</span>)
+        </p>
+    
+        <p class="ssc-star-rating__login-notice">
+        <a href="/wp-login.php?redirect_to=https://www.sqlservercentral.com/steps/the-basics-level-1-of-the-stairway-to-query-store">Log in</a> or <a href="/wp-login.php?action=register">register</a> to rate
+    </p>
+</div>
+
+                <p class="spaced-bottom--none">2020-10-07 <span class="date--first-published">(first published: <span itemprop="datePublished">2019-05-13</span>)</span></p>
+                                    <p class="spaced-bottom--none">5,638 reads</p>
+                                <ul class="list--bare list--horizontal spaced-bottom--none">
+                    <li class="spaced-right--tight"><a href="https://www.sqlservercentral.com/forums/topic/the-basics-level-1-of-the-stairway-to-query-store">Discuss</a></li>
+                </ul>
+            </div>
+            
+</article>
+
+<!-- / template-parts/ssc-related-content-list-item.php -->
+
+<!-- template-parts/ssc-related-content-list-item.php -->
+
+<!-- template-parts/content-loop.php -->
+<article class="grid__row spaced-bottom post-listing__post">
+
+        <div class="grid__col grid__col--span-2-of-12">
+        
+    <div class="thumbnail-container">
+        <a href="https://www.sqlservercentral.com/articles/a-quick-start-to-running-python-code-in-sql-server" class="link-image flex flex-align--center flex-justify--center"><img src="https://www.sqlservercentral.com/wp-content/mu-plugins/ssc/ssc-post-thumbnails/images/technical-article.svg" alt="" /></a>
+    </div>
+    </div>
+
+    
+    <div class="grid__col grid__col--span-8-of-12">
+        <div class="padded-h padded-h--none--small">
+            <h1 class="beta">
+                                    <a href="https://www.sqlservercentral.com/articles/a-quick-start-to-running-python-code-in-sql-server">A Quick Start to Running Python Code in SQL Server</a>
+                            </h1>
+
+                            <div class="post-listing__taxonomies">
+                    <ul class="post-listing__author list--horizontal list--bare display--inline">
+                        <li>by <a href="https://www.sqlservercentral.com/author/emmittalbright" itemprop="url"><span itemprop="author" itemtype="http://schema.org/Person"><span itemprop="name">Emmitt Albright</span></span></a></li>
+                    </ul>
+
+                                            <ul class="post-listing__sources list--horizontal list--bare display--inline">
+                            <li><a href="http://www.sqlservercentral.com">SQLServerCentral.com</a></li>
+                        </ul>
+                    
+                                            <ul class="post-listing__categories list--horizontal list--bare display--inline">
+                                                            <li><a href="https://www.sqlservercentral.com/categories/machine-learning-services-mls">Machine Learning Services (MLS)</a></li>
+                                                            <li><a href="https://www.sqlservercentral.com/categories/python">Python</a></li>
+                                                    </ul>
+                    
+                                    </div>
+            
+            <p>With the addition of Python to Machine Learning Services in SQL Server 2017, you can now execute your Python code inside of SQL Server.</p>
+
+                            
+<ul class="ssc-books-links">
+    
+    
+    
+    
+    
+    
+    
+    
+    </ul>
+
+            
+        </div>
+    </div>
+
+                        <div class="grid__col grid__col--span-2-of-12">
+                
+<div class="ssc-star-rating">
+
+    
+    <div class="ssc-star-rating__inner">
+
+        
+        <div class="ssc-star-rating__average">
+                                            <span class="ssc-star-rating__star ssc-star-rating__star--full  ssc-star-rating__star--active">★</span>
+                <span class="ssc-star-rating__star ssc-star-rating__star--half  ssc-star-rating__star--active">★</span>
+                                            <span class="ssc-star-rating__star ssc-star-rating__star--full  ssc-star-rating__star--active">★</span>
+                <span class="ssc-star-rating__star ssc-star-rating__star--half  ssc-star-rating__star--active">★</span>
+                                            <span class="ssc-star-rating__star ssc-star-rating__star--full  ssc-star-rating__star--active">★</span>
+                <span class="ssc-star-rating__star ssc-star-rating__star--half  ssc-star-rating__star--active">★</span>
+                                            <span class="ssc-star-rating__star ssc-star-rating__star--full  ssc-star-rating__star--active">★</span>
+                <span class="ssc-star-rating__star ssc-star-rating__star--half  ssc-star-rating__star--active">★</span>
+                                            <span class="ssc-star-rating__star ssc-star-rating__star--full  ssc-star-rating__star--active">★</span>
+                <span class="ssc-star-rating__star ssc-star-rating__star--half  ssc-star-rating__star--active">★</span>
+                    </div>
+
+        
+            </div>
+
+            <p class="ssc-star-rating__stats">
+            <span data-target="ssc-star-rating-score">5</span>
+            (<span data-target="ssc-star-rating-count">2</span>)
+        </p>
+    
+        <p class="ssc-star-rating__login-notice">
+        <a href="/wp-login.php?redirect_to=https://www.sqlservercentral.com/articles/a-quick-start-to-running-python-code-in-sql-server">Log in</a> or <a href="/wp-login.php?action=register">register</a> to rate
+    </p>
+</div>
+
+                <p class="spaced-bottom--none">2020-11-13 <span class="date--first-published">(first published: <span itemprop="datePublished">2019-04-18</span>)</span></p>
+                                    <p class="spaced-bottom--none">25,603 reads</p>
+                                <ul class="list--bare list--horizontal spaced-bottom--none">
+                    <li class="spaced-right--tight"><a href="https://www.sqlservercentral.com/forums/topic/a-quick-start-to-running-python-code-in-sql-server">Discuss</a></li>
+                </ul>
+            </div>
+            
+</article>
+
+<!-- / template-parts/ssc-related-content-list-item.php -->
+    </div>
+</div>
+<!-- / template-parts/ssc-related-content-list.php -->
+
+<!-- FOOTER -->
+<footer>
+    <div class="band background-color--blue--9 color--white footer__graphs">
+        <div class="band__inner-container band__inner-container--tight grid">
+            <a href="https://monitor.red-gate.com/overviews/SQLMON-EC2-BM2/cluster/sscdbcluster.ssc.local/sql/ssc-db-n1%5C(local)" target="_blank" rel="noopener" class="flex" title="Take a peek into our servers">
+                <div class="grid__col grid__col--span-2-of-12 grid__col--span-12-of-12--medium flex flex-align--center">
+                    <img src="https://www.sqlservercentral.com/wp-content/themes/ssc-twentyeighteen/images/header/ssc-logo.svg" alt="" class="logo">
+                    <img src="https://www.sqlservercentral.com/wp-content/themes/ssc-twentyeighteen/images/header/ssc.svg" alt="" class="logo">
+                </div>
+                <div class="grid__col grid__col--span-2-of-12 grid__col--span-3-of-12--medium">
+                    <div class="padded-h--tight">
+                        <p class="zeta color--white spaced-bottom--none">CPU</p>
+                        <script>var cpuChartData = {"labels":[1617460800146,1617461296515,1617461791808,1617462303263,1617462800073,1617463297339,1617463792478,1617464288592,1617464799537,1617465294841,1617465790308,1617466286427,1617466798900,1617467296759,1617467792926,1617468288126,1617468785504,1617469282985,1617469793421,1617470290687,1617470785846,1617471281387,1617471792808,1617472288090,1617472783950,1617473282223,1617473777821,1617474288607,1617474784445,1617475282317,1617475779099,1617476274706,1617476772248,1617477283909,1617477779105,1617478274945,1617478769928,1617479281655,1617479778597,1617480273920,1617480769576,1617481280456,1617481775929,1617482271415,1617482768476,1617483279132,1617483775930,1617484271254,1617484767158,1617485262904,1617485773922,1617486270077,1617486766094,1617487262424,1617487772888,1617488268278,1617488763762,1617489260103,1617489770619,1617490266226,1617490761768,1617491257255,1617491753801,1617492264614,1617492760675,1617493257759,1617493754430,1617494264749,1617494760668,1617495256420,1617495753434,1617496249327,1617496761278,1617497259010,1617497754542,1617498249946,1617498746073,1617499257083,1617499757024,1617500252849,1617500748287,1617501246485,1617501742730,1617502253655,1617502750362,1617503245638,1617503742307,1617504252524,1617504750772,1617505248645,1617505744206,1617506240244,1617506735907,1617507246154,1617507741717,1617508238609,1617508734316,1617509232775,1617509743451,1617510239769,1617510738593,1617511234774,1617511732757,1617512241118,1617512736894,1617513232080,1617513729432,1617514239612,1617514734583,1617515231574,1617515726853,1617516226131,1617516736781,1617517231894,1617517727317,1617518224029,1617518734527,1617519229979,1617519725276,1617520220397,1617520730739,1617521226727,1617521722861,1617522219296,1617522729451,1617523226158,1617523722132,1617524217898,1617524714023,1617525225510,1617525722167,1617526221614,1617526716767,1617527212044,1617527722540,1617528220857,1617528716326,1617529211707,1617529707646,1617530218036,1617530715379,1617531210597,1617531706152,1617532217562,1617532712959,1617533208865,1617533704928,1617534215880,1617534713012,1617535208283,1617535703546,1617536213748,1617536709551,1617537204710,1617537700392,1617538210685,1617538708061,1617539203911,1617539699266,1617540196662,1617540707169,1617541202593,1617541697860,1617542192993,1617542705257,1617543200961,1617543698255,1617544194015,1617544689284,1617545199385,1617545696487,1617546192296,1617546687654,1617547198445],"dataSets":[{"label":"","data":[8.50879411988921,7.315618804707147,9.032696709338808,9.355199804334926,8.801072734608088,4.029457621776821,8.720709523725944,5.248601566189107,7.681091247957557,6.165318605244777,9.33384926598873,6.809100320607726,5.68437065358056,6.970869262677028,6.257736239520619,4.4568418490803765,3.509030811941534,8.390713089267706,5.145337222574314,5.657501970322195,7.473521383815535,6.715758104959292,5.6929970521108535,3.6027503628158146,7.765465544111019,8.348375851989248,6.6972399633018505,5.787267336777838,7.200552991982502,8.400990607334816,8.005046264164921,5.838791475622957,4.92656198891477,6.228191002306917,4.9664637811738555,7.825652706368041,8.578656073068476,8.86742430984678,5.981113511411396,6.026283309331419,7.5933250756430715,4.746712820202096,7.379306689096869,4.730596706204023,6.169463672622708,5.7072756906453765,6.95548723944107,3.8898940371747117,4.225630117575169,7.939023009490278,4.795879659563148,5.403665820795165,5.48825061476063,9.392775215387822,9.781234590492152,8.41193030220385,4.446414667793477,4.8318387937001335,5.229090991249599,5.913666236380633,3.706093092934093,7.228131146247407,5.262917448530004,3.834267245515043,3.2072988102168942,7.054034696639934,3.1715057156867843,5.500157197881028,4.78790460438628,7.265246855803851,5.339698201310449,6.6416642585429075,5.780967201601344,5.160907308516133,5.4573605237238505,7.107526045903542,9.288754393190883,7.426308353886061,5.63972722983378,3.650010643659851,5.945647630615111,5.904878658033203,4.445893087866932,8.856092292987485,6.841158684686749,4.219948352391432,6.050459402862402,4.845515771823501,4.2363268169993065,6.443431662688489,8.176500977242808,5.460849464458886,5.808185280658018,7.7574341063322505,4.994716534587149,2.8159400956233953,7.923501427133944,8.32957483774784,7.486248364130374,6.541129123169191,5.001999616310721,4.49724370106817,6.460042712954276,5.006906228311428,17.64357215997843,17.031153943818335,22.954779321135806,23.22172398339864,30.368331097273014,6.9099476030818145,6.407766609962402,5.798214616643834,9.183300704433279,12.90072197966127,9.249117445243748,9.382401291750805,15.30750170049156,12.94587849445113,8.363044188016065,12.235801455566776,11.31402156645033,14.828344542420465,10.692049433209792,9.91247319833302,10.839609277168508,17.566881188154053,7.324215242378624,11.159718480232215,9.36595848010222,5.052288473428511,11.300546503892193,7.927907973897154,8.072790707254171,10.755103498606365,8.747999409381677,9.909134759543207,8.676283449353736,7.2785778764834665,6.623313005234414,8.113057328082323,11.530414538119416,7.5566405176468,5.087423015668315,8.982890261643117,7.916247160200679,9.678853443955838,10.268738911668835,8.22110643459144,6.448699691197127,5.616400541669853,6.04280626911646,3.475948084679032,6.514842249764744,4.058043958489171,6.834018083151634,4.097676035634432,6.6155791181080295,3.655339751265595,6.769516799145717,6.193196730893502,5.575418462003496,5.072204820551614,10.455213362968214,9.118833438310563,5.3809103464118335,8.054362080976412,5.329619172734585,5.091616306470072,5.47958593065966,7.918537134942063,6.561075285385059,8.684917407505438,6.452868836522558,4.715423390447703],"colour":"42, 94, 157"}],"chart":"cpu"};</script><div
+        id="chart--cpu"
+        height="66"
+        class="js-chart"
+        data-chart-type="line"
+        data-chart-source="cpuChartData"
+        data-chart-colour-opacity="1"
+        data-chart-vertical-gridlines="false"
+        data-chart-horizontal-gridlines="false"
+        data-chart-legend="false"
+        data-chart-horizontal-axis="false"
+        data-chart-vertical-axis="false"
+        data-chart-animation="false"
+        data-chart-point-radius="0"
+        data-chart-tooltips="false"
+    ></div>                    </div>
+                </div>
+
+                <div class="grid__col grid__col--span-2-of-12 grid__col--span-3-of-12--medium">
+                    <div class="padded-h--tight">
+                        <p class="zeta color--white spaced-bottom--none">Memory</p>
+                        <script>var memoryChartData = {"labels":[1617460303916,1617460800121,1617461296509,1617461791798,1617462303257,1617462800068,1617463297333,1617463792473,1617464288586,1617464799532,1617465294836,1617465790302,1617466286421,1617466798895,1617467296753,1617467792921,1617468288121,1617468785498,1617469282979,1617469793415,1617470290681,1617470785840,1617471281381,1617471792803,1617472288084,1617472783945,1617473282217,1617473777778,1617474288602,1617474784438,1617475282312,1617475779094,1617476274701,1617476772244,1617477283900,1617477779088,1617478274936,1617478769923,1617479281650,1617479778592,1617480273916,1617480769545,1617481280450,1617481775924,1617482271410,1617482768471,1617483279126,1617483775924,1617484271248,1617484767153,1617485262895,1617485773917,1617486270073,1617486766089,1617487262415,1617487772883,1617488268273,1617488763756,1617489260098,1617489770614,1617490266221,1617490761754,1617491257250,1617491768801,1617492264609,1617492760670,1617493257754,1617493754402,1617494264744,1617494760663,1617495256415,1617495753429,1617496249323,1617496761272,1617497259005,1617497754538,1617498249941,1617498746068,1617499257079,1617499757019,1617500252843,1617500748282,1617501246480,1617501742724,1617502253650,1617502750356,1617503245632,1617503742302,1617504252519,1617504750767,1617505248640,1617505744201,1617506240215,1617506735902,1617507246148,1617507741711,1617508238604,1617508734311,1617509232769,1617509743446,1617510239716,1617510738589,1617511234769,1617511732744,1617512241112,1617512736889,1617513232075,1617513729381,1617514239597,1617514734579,1617515231569,1617515726848,1617516226126,1617516736742,1617517231888,1617517727308,1617518223992,1617518734522,1617519229939,1617519725270,1617520220389,1617520730734,1617521226722,1617521722856,1617522219291,1617522729446,1617523226134,1617523722127,1617524217893,1617524714017,1617525225505,1617525722162,1617526221609,1617526716761,1617527212039,1617527722535,1617528220848,1617528716321,1617529211700,1617529707641,1617530218031,1617530715374,1617531210592,1617531706147,1617532217557,1617532712954,1617533208860,1617533704923,1617534215875,1617534713004,1617535208253,1617535703540,1617536213743,1617536709545,1617537204704,1617537700363,1617538210679,1617538708055,1617539203906,1617539699261,1617540196657,1617540707158,1617541202580,1617541697855,1617542192988,1617542705252,1617543200956,1617543698246,1617544194010,1617544689279,1617545199380,1617545696482,1617546192291,1617546687650,1617547198440],"dataSets":[{"label":"","data":[53686517760,53684371456,53680177152,53686157312,53682765824,53682413568,53686788096,53686730752,53680340992,53681889280,53684019200,53683036160,53681840128,53681684480,53681283072,53680283648,53686763520,53686779904,53684101120,53683576832,53669175296,53675384832,53679333376,53682626560,53684305920,53680832512,53681692672,53681356800,53682397184,53677957120,53671370752,53669044224,53669978112,53669617664,53667823616,53668691968,53666603008,53671501824,53672484864,53671018496,53669904384,53669953536,53669699584,53670019072,53669953536,53670748160,53686091776,53682012160,53686362112,53685854208,53685493760,53679742976,53679865856,53682274304,53684576256,53680070656,53680234496,53680177152,53677457408,53686468608,53681602560,53680832512,53677170688,53677416448,53675941888,53672878080,53673058304,53673058304,53682315264,53684715520,53683011584,53686763520,53686607872,53682954240,53678645248,53683494912,53685796864,53684011008,53686214656,53685575680,53682774016,53681250304,53685559296,53678481408,53679480832,53681700864,53679562752,53679759360,53674934272,53673713664,53670600704,53679120384,53679628288,53679562752,53676490752,53668495360,53671444480,53671591936,53666947072,53672042496,53681709056,53677989888,53682233344,53678604288,53676105728,53667577856,53687304192,53682814976,53682978816,53675302912,53674082304,53672329216,53673426944,53661908992,53659254784,53652029440,53641822208,53639118848,53634498560,53644189696,53644058624,53637218304,53634678784,53635817472,53637554176,53635031040,53640421376,53650440192,53650972672,53658697728,53657878528,53656043520,53646376960,53658320896,53657894912,53651374080,53653716992,53655306240,53656764416,53646876672,53643042816,53641887744,53650677760,53674418176,53674950656,53671084032,53674967040,53675155456,53669330944,53672263680,53676957696,53676982272,53675696128,53672026112,53671403520,53667700736,53675671552,53676695552,53676138496,53674237952,53673426944,53669920768,53672280064,53672607744,53677957120,53681283072,53680979968,53678522368,53675229184,53676695552,53679185920,53681864704,53679849472,53679497216,53674360832],"colour":"42, 94, 157"}],"chart":"memory"};</script><div
+        id="chart--memory"
+        height="66"
+        class="js-chart"
+        data-chart-type="line"
+        data-chart-source="memoryChartData"
+        data-chart-colour-opacity="1"
+        data-chart-vertical-gridlines="false"
+        data-chart-horizontal-gridlines="false"
+        data-chart-legend="false"
+        data-chart-horizontal-axis="false"
+        data-chart-vertical-axis="false"
+        data-chart-animation="false"
+        data-chart-point-radius="0"
+        data-chart-tooltips="false"
+    ></div>                    </div>
+                </div>
+
+                <div class="grid__col grid__col--span-2-of-12 grid__col--span-3-of-12--medium">
+                    <div class="padded-h--tight">
+                        <p class="zeta color--white spaced-bottom--none">Disk I/O</p>
+                        <script>var diskChartData = {"labels":[1617460779592,1617461289716,1617461799950,1617462280042,1617462790167,1617463300588,1617463780648,1617464290726,1617464800874,1617465281257,1617465791661,1617466271816,1617466782581,1617467294067,1617467775174,1617468285718,1617468767718,1617469278841,1617469790640,1617470271248,1617470781357,1617471291465,1617471773225,1617472283558,1617472765212,1617473278586,1617473788961,1617474269132,1617474780100,1617475260395,1617475770566,1617476280792,1617476761303,1617477272887,1617477783108,1617478263624,1617478773810,1617479254513,1617479765840,1617480276074,1617480756166,1617481266275,1617481777229,1617482257304,1617482767891,1617483278037,1617483758185,1617484268285,1617484750127,1617485260798,1617485770947,1617486251078,1617486762406,1617487274076,1617487754363,1617488264996,1617488745104,1617489256041,1617489766166,1617490246438,1617490756722,1617491266872,1617491747130,1617492257832,1617492737972,1617493248846,1617493759393,1617494239547,1617494750420,1617495260685,1617495740779,1617496251184,1617496762324,1617497243541,1617497754260,1617498234336,1617498744813,1617499255069,1617499736099,1617500246395,1617500757193,1617501238158,1617501748722,1617502231156,1617502741296,1617503251419,1617503733401,1617504243477,1617504724875,1617505236536,1617505746581,1617506227150,1617506737202,1617507247372,1617507728089,1617508238626,1617508720049,1617509231720,1617509742328,1617510222466,1617510733480,1617511244641,1617511725976,1617512235990,1617512716113,1617513226174,1617513736552,1617514219261,1617514729465,1617515210978,1617515721416,1617516231491,1617516712239,1617517223051,1617517734876,1617518215046,1617518725091,1617519205870,1617519716150,1617520226164,1617520706364,1617521216519,1617521726783,1617522207547,1617522717733,1617523227918,1617523708182,1617524218696,1617524699318,1617525210551,1617525720941,1617526202094,1617526713172,1617527223232,1617527703384,1617528214929,1617528695092,1617529205845,1617529715944,1617530196989,1617530712142,1617531192704,1617531703260,1617532213651,1617532693788,1617533204914,1617533715082,1617534195128,1617534706358,1617535186522,1617535696689,1617536206748,1617536687176,1617537197802,1617537708368,1617538188418,1617538698582,1617539208631,1617539688860,1617540199877,1617540680152,1617541190278,1617541700400,1617542180602,1617542692304,1617543203553,1617543684348,1617544196473,1617544676534,1617545186704,1617545696829,1617546177217,1617546687467,1617547197733],"dataSets":[{"label":"","data":[1543410.8683200455,1587665.582213351,1807411.8583815885,1919005.9028626743,4651972.174469317,1508067.657073623,4900901.652217519,1285429.402053257,1569696.446933973,1615553.9585875652,1909716.7920034162,1770016.7651071579,4143229.8134182477,2306415.680534304,1369566.9357641337,1214717.9301488332,1575032.0218470918,3983445.681850839,3838343.7511779903,1861712.3959254925,4590446.123796824,4058590.7951069362,1280910.5932400061,1619979.698341743,1391028.7377193056,1373856.6180837415,1726903.4961082214,2255069.8171685124,3977965.706563439,2264749.300284084,6439316.0629815,1263563.1683847024,1652175.267542884,1328690.9491040139,1452574.4188613961,2084513.3821989498,1491675.6974095432,4442419.251302957,3564000.909536745,1510751.1655960802,1662556.1369838382,1398066.78649035,1510371.6163798403,1683550.241497139,4040614.8049698346,2101613.871174073,1790617.1231141856,1040163.842016525,1175758.801674169,4087059.6144423075,1647679.8881221563,4032387.868688,1301027.1646472826,6351516.427705945,4404431.308415756,4267896.311462082,1205198.0432869885,2462993.161143849,1455289.5200661323,3929952.769496845,1182965.929785194,1283369.9855797205,1199312.0464850022,1447330.1217861518,1180779.4507483111,1531929.0662753358,1188099.980666594,6719609.685274763,2062582.0285234689,1025724.9889446144,1166005.144369146,1364538.2143253773,2139778.9048487595,1069280.4966557513,1542700.8157906295,8138393.777022914,1592166.4849177524,1368171.9625895447,1312307.0702262942,1295410.8542203815,3702755.8541544033,857624.4265571455,1723320.2161305738,3853134.718600665,3584767.8846153943,2108714.195750257,2710904.8943767254,6019954.81502699,1399852.0111679984,1699422.5783571722,4235963.4268538235,1611956.6297035925,1043971.4347402025,1171972.9064672801,1198348.0699907888,1130690.0942431851,1406527.218323906,3280436.609894987,1199950.7725524548,1058263.6103275002,1553265.2123141263,1831979.4085854932,1510157.9561688446,8211915.27753735,43947519.47636263,85737706.32416512,106983855.99827504,60851560.94248642,30043211.57385945,10117654.004865142,5285819.114760587,4180719.4140905086,26399556.582590837,36511107.08001012,38853126.14793324,51487286.974105306,53991904.70685923,31943996.610733137,30917601.65984724,38184019.100572266,18408566.635032766,4788395.5599686615,4049136.2833934613,2982553.2171951164,3339481.3905690685,10585621.82084486,6303617.199760908,3342855.593063593,3425042.1571250306,2580617.409529801,4120434.768675937,4352545.205842575,2391806.6528608445,3684539.2309375987,2375383.092993139,2241541.855044659,5408569.701021782,4533871.822577965,2826057.502556322,5419855.869096504,2934218.5481846565,2608151.812554282,1063318.5562518362,2051811.636101493,2744435.5866656,1797015.6523690112,5454545.82269545,2862308.38901041,2060899.6865130328,3953050.117720487,1358288.2062194736,1715500.0743091851,1450082.5708059445,1315635.3598245126,4516590.52527201,1795336.0509281368,1463857.3182928034,1124541.046967062,2100893.410102142,1570630.8686426568,1854082.802635182,2126515.4428422796,3953041.204826494,1545567.406067391,1467548.654367105,1454399.0111621679,1490382.2950996964,1338953.3615429085,1977263.692174289,4235600.942308968,4025915.467768203,1434437.1168644482,1230035.1362555146,3806830.7633423377],"colour":"42, 94, 157"}],"chart":"disk"};</script><div
+        id="chart--disk"
+        height="66"
+        class="js-chart"
+        data-chart-type="line"
+        data-chart-source="diskChartData"
+        data-chart-colour-opacity="1"
+        data-chart-vertical-gridlines="false"
+        data-chart-horizontal-gridlines="false"
+        data-chart-legend="false"
+        data-chart-horizontal-axis="false"
+        data-chart-vertical-axis="false"
+        data-chart-animation="false"
+        data-chart-point-radius="0"
+        data-chart-tooltips="false"
+    ></div>                    </div>
+                </div>
+
+                <div class="grid__col grid__col--span-2-of-12 grid__col--span-3-of-12--medium">
+                    <div class="padded-h--tight">
+                        <p class="zeta color--white spaced-bottom--none">Waits</p>
+                        <script>var waitsChartData = {"labels":[1617460802307,1617461282853,1617461762853,1617462242900,1617462722980,1617463203870,1617463684043,1617464283957,1617464764540,1617465246163,1617465724680,1617466204493,1617466684603,1617467285380,1617467765443,1617468245460,1617468725617,1617469206570,1617469686663,1617470286613,1617470766660,1617471246803,1617471726833,1617472206803,1617472686803,1617473286817,1617473767020,1617474246940,1617474727130,1617475206973,1617475687160,1617476287097,1617476767050,1617477248050,1617477727957,1617478208020,1617478688097,1617479168317,1617479768063,1617480248580,1617480728627,1617481208313,1617481688330,1617482168283,1617482768720,1617483248657,1617483728767,1617484208673,1617484688703,1617485171347,1617485770653,1617486250750,1617486731657,1617487212780,1617487692890,1617488173187,1617488653453,1617489253373,1617489733390,1617490213297,1617490693390,1617491173343,1617491653327,1617492253370,1617492733527,1617493213420,1617493694073,1617494174090,1617494654247,1617495254213,1617495734337,1617496214587,1617496694650,1617497174400,1617497654527,1617498254460,1617498734743,1617499214587,1617499694463,1617500174480,1617500654463,1617501255490,1617501735677,1617502215630,1617502695617,1617503175630,1617503656617,1617504136460,1617504736393,1617505216503,1617505696473,1617506176507,1617506656473,1617507136600,1617507736660,1617508216597,1617508696893,1617509177817,1617509657817,1617510137817,1617510738000,1617511217877,1617511697860,1617512177830,1617512658000,1617513138080,1617513738420,1617514219030,1617514698547,1617515178437,1617515658540,1617516138517,1617516619440,1617517219373,1617517699717,1617518179750,1617518659547,1617519140657,1617519619483,1617520219933,1617520700433,1617521179653,1617521659683,1617522140683,1617522621543,1617523221790,1617523701700,1617524181717,1617524662637,1617525143043,1617525625043,1617526223053,1617526703023,1617527184260,1617527663387,1617528143260,1617528624307,1617529104247,1617529705117,1617530185943,1617530665273,1617531145227,1617531625353,1617532105760,1617532705443,1617533185897,1617533666930,1617534145710,1617534625523,1617535105867,1617535705613,1617536185613,1617536665800,1617537145710,1617537625850,1617538105897,1617538706143,1617539186677,1617539666783,1617540146770,1617540626740,1617541107037,1617541706737,1617542187033,1617542666910,1617543148003,1617543626817,1617544106880,1617544587083,1617545187000,1617545667330,1617546147033,1617546626970,1617547107050],"dataSets":[{"label":"","data":[42.61267847783486,37.17021887602851,60.34166666666666,75.43844665209865,20.41743042826196,12.628667678679115,15.55064528826069,61.16710061775521,47.12401395804678,38.29966592127037,58.65622328987267,92.36723473519892,59.82587323738309,64.39660639471883,63.218785867688204,29.919773674682354,6.3895767426071055,39.862522949227895,46.94298812938327,16.291357613134426,53.309363458161386,109.79437375948416,30.67308293231673,2.6918349063483133,19.82916666666667,65.37680787448292,19.13565721163758,21.03892315385898,50.06143401570213,35.50327919757087,43.73712741077956,8.414216826100075,5.852656405939749,8.621621621621621,15.500919969910838,24.37180120109236,46.153012954171935,61.934113531298145,26.90472299940308,16.8048164789175,16.517132697423378,18.954065784700827,32.184276806863096,6.7256585540667535,38.91832115609132,26.022165409209958,15.833871404469805,14.484086466933109,8.232818782159448,100.84658671816081,11.648473400900375,30.98540503273297,12.447313097958649,45.48940707469816,67.90943742059112,47.041726265206734,12.584692649490076,6.89758634484598,15.3744554880348,25.177794864421646,8.92327111622123,66.5648511416743,20.49859995333178,12.154128954091622,4.23819708970191,63.23492945302391,5.777556782127647,21.345077361843433,27.895042663128933,40.14060796778485,16.96853312894169,11.712649661634565,10.623605651758204,26.486711829077638,16.585195167112033,41.55130656256615,35.67271796003606,31.73114595576896,16.479257141428203,11.947493526270945,34.57205776037902,5.473963732078592,12.797097797316463,32.336499615587364,25.494440474429513,5.685262690802125,56.25100054679232,33.52763299662598,14.086573000651741,21.69711107871113,30.010208971394047,15.621810121783042,19.522216156977784,29.538018066053354,18.68813118688131,20.1526450346608,51.43703049785965,42.844607463965204,30.937499999999996,14.118749999999999,5.803230014845472,16.723035277789933,25.005052262267625,29.153905452424112,45.13609763208863,26.276870521579742,76.10687277209581,122.25297018372486,606.1516067209294,58.17791577236451,19.166720474564833,9.529623294449525,55.254167507064544,143.48768945865623,83.73374081907967,79.4674532792537,337.65321583919865,157.1906632578828,126.85610221667157,143.40078274627362,127.3735691987513,222.74738116105334,102.6269191508864,83.35966735966737,66.59318720625546,209.93024538231762,74.8890416953179,46.260861594485206,103.58479580803458,15.938601932532066,72.17634854771784,45.11964682864834,49.182240556701466,68.0808001047301,46.494979410469455,75.68669210395251,41.54687587699331,20.963037046297455,41.12869672308486,43.97016800256225,81.45745102538962,40.19343520420707,8.524845561373473,50.30942513327243,31.923532933233062,57.587198774492464,25.503447788405367,79.63365219933998,9.914279104567822,31.1505920756791,26.29779940174674,6.616666666666667,33.859725481947656,6.655414556896083,46.932144791102594,8.780390253454348,33.80947145003882,15.786604069639193,25.79638663128559,67.8726715515212,27.028772631622807,12.575552210403146,94.41387360346837,48.54298182787281,52.40926320703013,31.02934359884679,27.486664968025163,34.457977390467505,16.903267992911335,47.899959494396725,41.798346969791595,41.45273221138913,30.54567578661366,43.60106648891851],"colour":"42, 94, 157"}],"chart":"waits"};</script><div
+        id="chart--waits"
+        height="66"
+        class="js-chart"
+        data-chart-type="line"
+        data-chart-source="waitsChartData"
+        data-chart-colour-opacity="1"
+        data-chart-vertical-gridlines="false"
+        data-chart-horizontal-gridlines="false"
+        data-chart-legend="false"
+        data-chart-horizontal-axis="false"
+        data-chart-vertical-axis="false"
+        data-chart-animation="false"
+        data-chart-point-radius="0"
+        data-chart-tooltips="false"
+    ></div>                    </div>
+                </div>
+
+                <div class="grid__col grid__col--span-2-of-12 grid__col--span-12-of-12--medium text--right flex flex-align--center flex-justify--end">Take a peek into our servers</div>
+            </a>
+        </div>
+    </div>
+
+    <div class="band background-color--blue--8 color--white footer__menu">
+        <div class="band__inner-container padded-v--loose padded-h--tight grid flex">
+            <div class="grid__col grid__col--span-9-of-12 grid__col--span-12-of-12--medium flex flex-align--center">
+                <ul id="menu-footer-menu" class="list--horizontal spaced-bottom--none"><li id="menu-item-22" class="menu-item menu-item-type-post_type menu-item-object-page spaced-bottom--none spaced-right menu-item-22 spaced-bottom--none spaced-right--tight"><a href="https://www.sqlservercentral.com/about">About SQLServerCentral</a></li>
+<li id="menu-item-3673197" class="menu-item menu-item-type-post_type menu-item-object-page spaced-bottom--none spaced-right menu-item-3673197 spaced-bottom--none spaced-right--tight"><a href="https://www.sqlservercentral.com/contact-us">Contact Us</a></li>
+<li id="menu-item-24" class="menu-item menu-item-type-post_type menu-item-object-page spaced-bottom--none spaced-right menu-item-24 spaced-bottom--none spaced-right--tight"><a href="https://www.sqlservercentral.com/terms">Terms of Use</a></li>
+<li id="menu-item-26" class="menu-item menu-item-type-post_type menu-item-object-page spaced-bottom--none spaced-right menu-item-26 spaced-bottom--none spaced-right--tight"><a href="https://www.sqlservercentral.com/privacy">Privacy Policy</a></li>
+<li id="menu-item-28" class="menu-item menu-item-type-post_type menu-item-object-page spaced-bottom--none spaced-right menu-item-28 spaced-bottom--none spaced-right--tight"><a href="https://www.sqlservercentral.com/contribute">Contribute</a></li>
+<li id="menu-item-30" class="menu-item menu-item-type-post_type menu-item-object-page spaced-bottom--none spaced-right menu-item-30 spaced-bottom--none spaced-right--tight"><a href="https://www.sqlservercentral.com/contributors">Contributors</a></li>
+<li id="menu-item-3425913" class="menu-item menu-item-type-post_type menu-item-object-page spaced-bottom--none spaced-right menu-item-3425913 spaced-bottom--none spaced-right--tight"><a href="https://www.sqlservercentral.com/author">Authors</a></li>
+<li id="menu-item-3426090" class="menu-item menu-item-type-post_type menu-item-object-page spaced-bottom--none spaced-right menu-item-3426090 spaced-bottom--none spaced-right--tight"><a href="https://www.sqlservercentral.com/newsletter-archive">Newsletters</a></li>
+</ul>            </div>
+
+            <div class="grid__col grid__col--span-2-of-12 grid__col--push-1-of-12 grid__col--span-12-of-12--medium grid__col--push-0-of-12--medium flex flex-align--center flex-justify--end">
+                <a href="https://www.red-gate.com/" target="_blank" class="link-image"><img src="https://www.sqlservercentral.com/wp-content/themes/ssc-twentyeighteen/images/footer/redgate.svg" alt=""/></a>
+            </div>
+        </div>
+    </div>
+</footer>
+<!-- / FOOTER -->
+
+<script type='text/javascript'>
+/* <![CDATA[ */
+var ssc_utilities_ajax_combined_data = {"ajax_url":"https:\/\/www.sqlservercentral.com\/wp-admin\/admin-ajax.php"};
+/* ]]> */
+</script>
+<script type='text/javascript' defer src='https://www.sqlservercentral.com/wp-content/mu-plugins/ssc/ssc-utilities/js/ajax-combined.min.js?ver=2020-06-03'></script>
+<script type='text/javascript' defer src='https://www.sqlservercentral.com/wp-content/mu-plugins/ssc/ssc-performance/js/ssc-lazy-load.min.js'></script>
+<script type='text/javascript'>
+/* <![CDATA[ */
+var ssc_related_forum_topics_top_comments_data = {"ajax_url":"https:\/\/www.sqlservercentral.com\/wp-admin\/admin-ajax.php","post_id":"3861018"};
+/* ]]> */
+</script>
+<script type='text/javascript' defer src='https://www.sqlservercentral.com/wp-content/mu-plugins/ssc/ssc-related-forum-topics/js/top-comments.min.js?ver=2020-06-03'></script>
+<script type='text/javascript'>
+/* <![CDATA[ */
+var ssc_star_ratings_data = {"ajax_url":"https:\/\/www.sqlservercentral.com\/wp-admin\/admin-ajax.php"};
+/* ]]> */
+</script>
+<script type='text/javascript' defer src='https://www.sqlservercentral.com/wp-content/mu-plugins/ssc/ssc-star-ratings/js/interactive.min.js?ver=2020-06-03'></script>
+<script type='text/javascript' defer src='https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js?lang=sql&#038;lang=vb'></script>
+<script type='text/javascript' defer src='https://www.sqlservercentral.com/wp-content/mu-plugins/ssc/ssc-syntax-highlighting/inc/lexers/lang-vs.js'></script>
+<script type='text/javascript'>
+/* <![CDATA[ */
+var ssc_visitor_counter_data = {"ajax_url":"https:\/\/www.sqlservercentral.com\/wp-admin\/admin-ajax.php","post_id":"3861018","is_singular":"1"};
+/* ]]> */
+</script>
+<script type='text/javascript' defer src='https://www.sqlservercentral.com/wp-content/mu-plugins/ssc/ssc-visitor-counter/js/ssc-visitor-counter.min.js?ver=2020-06-03'></script>
+<script type='text/javascript' defer src='https://www.sqlservercentral.com/wp-content/plugins/bbpress/templates/default/js/editor.js?ver=2.5.14-6684'></script>
+<script type='text/javascript'>
+/* <![CDATA[ */
+var SSC2018 = {"templateUrl":"https:\/\/www.sqlservercentral.com\/wp-content\/themes\/ssc-twentyeighteen"};
+/* ]]> */
+</script>
+<script type='text/javascript' defer src='https://www.sqlservercentral.com/wp-content/themes/ssc-twentyeighteen/js/sqlservercentral.min.js?ver=2020-06-03'></script>
+<script type='text/javascript' defer src='https://www.sqlservercentral.com/wp-content/plugins/gd-bbpress-attachments/js/front.js?ver=3.1_b2302_free'></script>
+<script type='text/javascript'>
+/* <![CDATA[ */
+var newsletter = {"messages":{"email_error":"Email address is not correct","name_error":"Name is required","surname_error":"Last name is required","privacy_error":"You must accept the privacy policy"},"profile_max":"20"};
+/* ]]> */
+</script>
+<script type='text/javascript' defer src='https://www.sqlservercentral.com/wp-content/plugins/newsletter/subscription/validate.js?ver=5.8.9'></script>
+<script type='text/javascript' src='https://www.sqlservercentral.com/wp-includes/js/wp-embed.min.js?ver=5.1.1'></script>
+
+</body>
+</html>
+
+<!--
+Performance optimized by W3 Total Cache. Learn more: https://www.w3-edge.com/products/
+
+Page Caching using redis 
+
+Served from: sqlservercentral.com @ 2021-04-05 11:31:27 by W3 Total Cache
+-->
